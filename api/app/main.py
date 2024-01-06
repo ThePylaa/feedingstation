@@ -4,6 +4,8 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
+from models import accepted_animals, animal, feedingstation, portion, user
+
 load_dotenv()
 
 app = FastAPI(
