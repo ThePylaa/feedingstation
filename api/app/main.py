@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request, Response
 from utils.db.db import engine, SessionLocal
 
 #Import different Models 
-from models import accepted_animals, animal, feedingstation, portion, usermodel
+from models import accepted_animalsmodel, animalmodel, feedingstationmodel, portionmodel, usermodel
 
 #Import different Routers 
 from routers import user

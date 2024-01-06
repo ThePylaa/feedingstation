@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Union
 from sqlalchemy.orm import Session
-from models.usermodel import Usermodel
+from models.usermodel import User_Model
 from utils.db.db import get_db
 from schemas.users import *
 from uuid import uuid4
@@ -16,7 +16,7 @@ def info():
 @router.post("/register")
 def register(user: createUser, db: Session = Depends(get_db)):
 
-    existing_email = db.query(Usermodel).filter(Usermodel.email == user.email).first()
+    existing_email = db.query(User_Model).filter(User_Model.email == user.email).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -24,7 +24,7 @@ def register(user: createUser, db: Session = Depends(get_db)):
     #TODO: Hash password!!!!!
     hashed_password = user.password
     ##########################
-    dbUser = Usermodel(user_id=uuid, email=user.email, forename=user.forename, lastname=user.lastname, password_hash=hashed_password)
+    dbUser = User_Model(user_id=uuid, email=user.email, forename=user.forename, lastname=user.lastname, password_hash=hashed_password)
     db.add(dbUser)
     db.commit()
     db.refresh(dbUser)

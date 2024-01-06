@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Uuid, String, ForeignKey, DateTime
 from utils.db.db import Base
 
-class Portion(Base):
+class Portion_Model(Base):
     __tablename__ = "portion"
 
     portion_id = Column(Uuid(as_uuid=True), primary_key=True, index=True)

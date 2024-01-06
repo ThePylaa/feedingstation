@@ -1,7 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Uuid, String, Boolean
 from utils.db.db import Base
 
-class FeedingStation(Base):
+class FeedingStation_Model(Base):
     __tablename__ = "feedingstation"
 
     feedingstation_id = Column(Uuid(as_uuid=True), primary_key=True, index=True)

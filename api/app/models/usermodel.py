@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Uuid, String
 from utils.db.db import Base
 
-class Usermodel(Base):
+class User_Model(Base):
     __tablename__ = "user"
 
     user_id = Column(Uuid(as_uuid=True), primary_key=True, index=True)
