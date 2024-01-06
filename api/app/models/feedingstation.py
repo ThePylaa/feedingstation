@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Uuid, String, Boolean
-from database import Base
+from utils.db.db import Base
 
 class FeedingStation(Base):
     __tablename__ = "feedingstation"

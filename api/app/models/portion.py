@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Uuid, String, ForeignKey, DateTime
-from database import Base
+from utils.db.db import Base
 
 class Portion(Base):
     __tablename__ = "portion"

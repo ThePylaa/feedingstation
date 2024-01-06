@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Uuid, String
-from database import Base
+from utils.db.db import Base
 
 class Animal(Base):
     __tablename__ = "animal"
