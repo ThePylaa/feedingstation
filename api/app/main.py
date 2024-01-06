@@ -4,11 +4,17 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(
 
+    title="API for the project innovative Feeding Station",
+    description="This is the API for the project innovative Feeding Station for the DHBW Heidenheim",
+    summary="Created by Max Loehr, Paul Brilmayer",
+    docs_url="/",
+    version="v0.0.1",
+
+)
 
 @app.get("/")
 def read_root():
