@@ -8,7 +8,7 @@ from fastapi import Request
 load_dotenv()
 
 #Database Connection
-SQLALCHEMYPost_DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_IP')}/{os.getenv('DB_NAME')}"
+SQLALCHEMYPost_DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 
 engine = create_engine(SQLALCHEMYPost_DATABASE_URL)
 
