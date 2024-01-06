@@ -1,19 +1,22 @@
-from typing import Union
 import os
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+
 
 from utils.db.db import engine, SessionLocal
 
 #Import different Models 
-from models import accepted_animals, animal, feedingstation, portion, user
+from models import accepted_animals, animal, feedingstation, portion, usermodel
 
 #Import different Routers 
 from routers import user
 
 
 load_dotenv()
+
+#Generate Table
+usermodel.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
 
@@ -28,14 +31,16 @@ app = FastAPI(
 #Add Routes to the API
 app.include_router(user.router)
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+#DB Middleware
+@app.middleware("http")
+async def db_session_middleware(request: Request, call_next):
+    response = Response("Internal server error", status_code=500)
+    try:
+        request.state.db = SessionLocal()
+        response = await call_next(request)
+    finally:
+        request.state.db.close()
+    return response
 
 if __name__ == "__main__":
     print(f"Started on {os.getenv('API_IP')}:{os.getenv('API_PORT')} with Mode {os.getenv('DEBUG')}")
