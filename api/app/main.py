@@ -44,4 +44,4 @@ async def db_session_middleware(request: Request, call_next):
 
 if __name__ == "__main__":
     print(f"Started on {os.getenv('API_IP')}:{os.getenv('API_PORT')} with Mode {os.getenv('DEBUG')}")
-    uvicorn.run("main:app", reload=True, log_level="info")
+    uvicorn.run("main:app", host=os.getenv('API_IP'), port=int(os.getenv('API_PORT')), reload=True, log_level="info")
