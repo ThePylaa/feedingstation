@@ -4,7 +4,14 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
+from utils.db.db import engine, SessionLocal
+
+#Import different Models 
 from models import accepted_animals, animal, feedingstation, portion, user
+
+#Import different Routers 
+from routers import user
+
 
 load_dotenv()
 
@@ -17,6 +24,9 @@ app = FastAPI(
     version="v0.0.1",
 
 )
+
+#Add Routes to the API
+app.include_router(user.router)
 
 @app.get("/")
 def read_root():
