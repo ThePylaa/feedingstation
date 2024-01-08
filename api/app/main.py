@@ -10,13 +10,14 @@ from utils.db.db import engine, SessionLocal
 from models import accepted_animalsmodel, animalmodel, feedingstationmodel, portionmodel, usermodel
 
 #Import different Routers 
-from routers import user
+from routers import user, feedingstation
 
 
 load_dotenv()
 
 #Generate Table
 usermodel.Base.metadata.create_all(bind=engine)
+feedingstationmodel.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
 
@@ -30,6 +31,7 @@ app = FastAPI(
 
 #Add Routes to the API
 app.include_router(user.router)
+app.include_router(feedingstation.router)
 
 #DB Middleware
 @app.middleware("http")
