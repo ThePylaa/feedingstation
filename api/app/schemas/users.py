@@ -15,6 +15,13 @@ class createUser(BaseModel):
     password: str
 
 
+class deleteUser(BaseModel):
+    user_id: uuid.UUID
+
+class loginUser(BaseModel):
+    email: str
+    password: str
+
 class TestMessage(BaseModel):
     message: str
     
