@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
-from typing import Union
 from sqlalchemy.orm import Session
 from models.usermodel import User_Model
 from models.user_tokenmodel import User_Token_Model
@@ -17,11 +15,14 @@ router = APIRouter(tags=["user"],prefix="/user")
 
 @router.get("/me",response_model=User)
 def info():
-    return {"Hello": "World"}
+    return {
+        "user_id": uuid4(),
+        "email": "Hans",
+        "forename": "Hans",
+        "lastname": "Hans",
+        "password_hash": "Hans"
+    }
 
-@router.get("/get_all_user")
-def get_all_users(db: Session = Depends(get_db)):
-    return db.query(User_Model).all()
 
 @router.post("/register")
 def register(user: createUser, db: Session = Depends(get_db)):
@@ -37,19 +38,6 @@ def register(user: createUser, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(dbUser)
     return dbUser
-
-@router.delete("/delete")
-def delete(user: deleteUser, db: Session = Depends(get_db)):
-
-    existing_user = db.query(User_Model).filter(User_Model.user_id == user.user_id).first()
-    if not existing_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    existing_user_name = db.query(User_Model).filter(User_Model.user_id == user.user_id).first()
-
-    db.delete(existing_user)
-    db.commit()
-    return {"message": "User " + existing_user_name.forename + " " + existing_user_name.lastname + " deleted" }
     
 @router.post("/login")
 def login(form_data: loginUser = Depends(),db: Session = Depends(get_db)):
@@ -84,3 +72,19 @@ def login(form_data: loginUser = Depends(),db: Session = Depends(get_db)):
             detail="Incorrect Username",
             headers={"WWW-Authenticate": "Bearer"},
         )
+@router.delete("/delete")
+def delete(user: deleteUser, db: Session = Depends(get_db)):
+
+    existing_user = db.query(User_Model).filter(User_Model.user_id == user.user_id).first()
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    existing_user_name = db.query(User_Model).filter(User_Model.user_id == user.user_id).first()
+
+    db.delete(existing_user)
+    db.commit()
+    return {"message": "User " + existing_user_name.forename + " " + existing_user_name.lastname + " deleted" }
+
+@router.get("/get_all_user")
+def get_all_users(db: Session = Depends(get_db)):
+    return db.query(User_Model).all()

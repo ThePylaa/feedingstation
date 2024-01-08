@@ -2,5 +2,5 @@ from pydantic import BaseModel
 import uuid
 
 class createToken(BaseModel):
-    uuid: uuid.UUID
+    token_id: uuid.UUID
   
