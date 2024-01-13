@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from models.usermodel import User_Model
 from models.user_tokenmodel import User_Token_Model
 from utils.db.db import get_db
-from utils.auth.auth import hashPassword, verify_password, create_access_token
+from utils.auth.auth import hashPassword, verify_password, create_access_token, decode_access_token
 from schemas.users import *
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 
@@ -15,6 +15,9 @@ router = APIRouter(tags=["user"],prefix="/user")
 
 @router.get("/me",response_model=User)
 def info():
+    decode = decode_access_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2FiOTU0Y2ItMGJiOC00YzdhLTllMDAtZTlmYWRjZTk0MTI4IiwiZXhwIjoxNzA1MTY0MTEyfQ.bFwjkD0SeaW84CJ05vyrH_i0HhBe89ot9RrwmYo4OiU")
+    print(decode)
+    print(datetime.utcnow() + timedelta(minutes=30))
     return {
         "user_id": uuid4(),
         "email": "Hans",
@@ -26,7 +29,7 @@ def info():
 
 @router.post("/register")
 def register(user: createUser, db: Session = Depends(get_db)):
-
+    """Function to register a new user. The user has to provide an email, a forename, a lastname and a password. The password is hashed before it is stored in the database. Email has to be unique."""
     existing_email = db.query(User_Model).filter(User_Model.email == user.email).first()
     if existing_email:
         raise HTTPException(status_code=406, detail="Email already registered")
@@ -74,17 +77,23 @@ def login(form_data: loginUser = Depends(),db: Session = Depends(get_db)):
         )
 @router.delete("/delete")
 def delete(user: deleteUser, db: Session = Depends(get_db)):
+    """Function to delete a user. The user can be identified by the uuid or the email"""
+    try:
+        uuid.UUID(user.info)
+        db_user = db.query(User_Model).filter(User_Model.uuid == user.info).first()
+    except:
+        db_user = db.query(User_Model).filter(User_Model.email == user.info).first()
 
-    existing_user = db.query(User_Model).filter(User_Model.user_id == user.user_id).first()
-    if not existing_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    existing_user_name = db.query(User_Model).filter(User_Model.user_id == user.user_id).first()
-
-    db.delete(existing_user)
-    db.commit()
-    return {"message": "User " + existing_user_name.forename + " " + existing_user_name.lastname + " deleted" }
+    if db_user != None:
+        db.delete(db_user)
+        db.commit()
+        return db_user
+    raise HTTPException(
+        status_code=400,
+        detail="No User Found"
+    )
 
 @router.get("/get_all_user")
 def get_all_users(db: Session = Depends(get_db)):
+    """Function that returns all users"""
     return db.query(User_Model).all()

@@ -16,7 +16,7 @@ class createUser(BaseModel):
 
 
 class deleteUser(BaseModel):
-    user_id: uuid.UUID
+    info: str
 
 class loginUser(BaseModel):
     email: str
