@@ -42,7 +42,7 @@ def register(user: createUser, db: Session = Depends(get_db)):
     return dbUser
     
 @router.post("/login")
-def login(form_data: loginUser = Depends(),db: Session = Depends(get_db)):
+def login(form_data: loginUser = Depends(), db: Session = Depends(get_db)):
     """Function to get a standard oauth2 token"""
     email = form_data.email
     password = form_data.password
@@ -61,7 +61,7 @@ def login(form_data: loginUser = Depends(),db: Session = Depends(get_db)):
             content = {"access_token": token, "token_type": "bearer"}
             response = JSONResponse(content=content)
             response.set_cookie(key="access_token", value=token)
-            return token 
+            return response 
         else:
             raise HTTPException(
             status_code=401,
