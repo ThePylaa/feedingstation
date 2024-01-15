@@ -15,9 +15,8 @@ router = APIRouter(tags=["user"],prefix="/user")
 
 @router.get("/me",response_model=User)
 def info():
-    decode = decode_access_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2FiOTU0Y2ItMGJiOC00YzdhLTllMDAtZTlmYWRjZTk0MTI4IiwiZXhwIjoxNzA1MTY0MTEyfQ.bFwjkD0SeaW84CJ05vyrH_i0HhBe89ot9RrwmYo4OiU")
-    print(decode)
-    print(datetime.utcnow() + timedelta(minutes=30))
+    token = decode_access_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2FiOTU0Y2ItMGJiOC00YzdhLTllMDAtZTlmYWRjZTk0MTI4IiwiZXhwIjoxNzA1MzI0Njc1fQ.hEnF0YYXDj8eQwxxGTVU0RKthgE54QdfaGOCpwxOoPk")
+    print(datetime.utcfromtimestamp(token.get("exp")))
     return {
         "user_id": uuid4(),
         "email": "Hans",
@@ -93,7 +92,14 @@ def delete(user: deleteUser, db: Session = Depends(get_db)):
         detail="No User Found"
     )
 
-@router.get("/get_all_user")
+@router.get("/all_users")
 def get_all_users(db: Session = Depends(get_db)):
     """Function that returns all users"""
     return db.query(User_Model).all()
+
+@router.delete("/all_expired_tokens")
+def delete_all_expired_tokens(db: Session = Depends(get_db)):
+    """Function that deletes all expired tokens. Tokens are valid for 30 minutes."""
+    db.query(User_Token_Model).filter(User_Token_Model.creation_date < datetime.now() - timedelta(minutes=30)).delete()
+    db.commit()
+    return "Deleted all expired tokens"
