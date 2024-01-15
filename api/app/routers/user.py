@@ -99,6 +99,12 @@ def login(form_data: loginUser = Depends(), db: Session = Depends(get_db)):
             detail="Incorrect Username",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+@router.get("/all_users")
+def get_all_users(db: Session = Depends(get_db)):
+    """Function that returns all users"""
+    return db.query(User_Model).all()
+
 @router.delete("/delete")
 def delete(user: deleteUser, db: Session = Depends(get_db)):
     """Function to delete a user. The user can be identified by the uuid or the email"""
@@ -116,11 +122,6 @@ def delete(user: deleteUser, db: Session = Depends(get_db)):
         status_code=400,
         detail="No User Found"
     )
-
-@router.get("/all_users")
-def get_all_users(db: Session = Depends(get_db)):
-    """Function that returns all users"""
-    return db.query(User_Model).all()
 
 @router.delete("/all_expired_tokens")
 def delete_all_expired_tokens(db: Session = Depends(get_db)):
