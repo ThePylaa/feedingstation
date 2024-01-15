@@ -50,6 +50,10 @@ def info(request: Request, db: Session = Depends(get_db)):
         "lastname": db_user.lastname
     }
 
+@router.get("/all_users")
+def get_all_users(db: Session = Depends(get_db)):
+    """Function that returns all users"""
+    return db.query(User_Model).all()
 
 @router.post("/register")
 def register(user: createUser, db: Session = Depends(get_db)):
@@ -99,11 +103,6 @@ def login(form_data: loginUser = Depends(), db: Session = Depends(get_db)):
             detail="Incorrect Username",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-@router.get("/all_users")
-def get_all_users(db: Session = Depends(get_db)):
-    """Function that returns all users"""
-    return db.query(User_Model).all()
 
 @router.delete("/delete")
 def delete(user: deleteUser, db: Session = Depends(get_db)):
