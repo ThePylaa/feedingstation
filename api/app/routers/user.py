@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from models.usermodel import User_Model
@@ -13,16 +13,41 @@ from uuid import uuid4
 # This is the user router. It is used to get the information of the current user, to update the information of the current user, to register a new user and to sign in and out.
 router = APIRouter(tags=["user"],prefix="/user")
 
-@router.get("/me",response_model=User)
-def info():
-    token = decode_access_token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2FiOTU0Y2ItMGJiOC00YzdhLTllMDAtZTlmYWRjZTk0MTI4IiwiZXhwIjoxNzA1MzI0Njc1fQ.hEnF0YYXDj8eQwxxGTVU0RKthgE54QdfaGOCpwxOoPk")
-    print(datetime.utcfromtimestamp(token.get("exp")))
+@router.get("/me",response_model=meUser)
+def info(request: Request, db: Session = Depends(get_db)):
+    #delete all expired tokens out of the database
+    delete_all_expired_tokens(db)
+
+    #get the token out of the cookie, if there is no cookie, the user is not authenticated
+    access_token_cookie = request.cookies.get("access_token")
+    if access_token_cookie is None:
+        raise HTTPException(status_code=401, detail="No Cookie found, please login")
+    
+    #decode the token, if the token is not valid, the user is not authenticated
+    dec_token = decode_access_token(access_token_cookie) 
+    all_db_user_token = db.query(User_Token_Model).filter(User_Token_Model.user_id == dec_token.get("user_id")).all()
+
+    if all_db_user_token is None:
+        raise HTTPException(status_code=401, detail="Not authenticated or token expired")
+    
+    for token in all_db_user_token:
+        if token.token == access_token_cookie:
+            db_user_token = token
+            break
+    else:
+        raise HTTPException(status_code=401, detail="No matching token found")
+
+    
+    if db_user_token.creation_date < datetime.now() - timedelta(minutes=30):
+        raise HTTPException(status_code=401, detail="Token expired")
+    
+    db_user = db.query(User_Model).filter(User_Model.user_id == dec_token.get("user_id")).first()
+
     return {
-        "user_id": uuid4(),
-        "email": "Hans",
-        "forename": "Hans",
-        "lastname": "Hans",
-        "password_hash": "Hans"
+        "user_id": str(db_user.user_id),
+        "email": db_user.email,
+        "forename": db_user.forename,
+        "lastname": db_user.lastname
     }
 
 
@@ -60,7 +85,7 @@ def login(form_data: loginUser = Depends(), db: Session = Depends(get_db)):
             db.refresh(dbtoken)
             content = {"access_token": token, "token_type": "bearer"}
             response = JSONResponse(content=content)
-            response.set_cookie(key="access_token", value=token)
+            response.set_cookie(key="access_token", value=token, max_age=1800)
             return response 
         else:
             raise HTTPException(

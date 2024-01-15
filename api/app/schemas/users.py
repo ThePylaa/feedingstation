@@ -22,6 +22,8 @@ class loginUser(BaseModel):
     email: str
     password: str
 
-class TestMessage(BaseModel):
-    message: str
-    
+class meUser(BaseModel):
+    user_id: str
+    email: str
+    forename: str
+    lastname: str    
