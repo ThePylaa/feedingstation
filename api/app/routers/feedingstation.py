@@ -12,6 +12,14 @@ from uuid import uuid4
 # This is the user router. It is used to get the information of the current user, to update the information of the current user, to register a new user and to sign in and out.
 router = APIRouter(tags=["feedingstation"],prefix="/feedingstation")
 
+@router.get("/all_stations")
+def get_all_stations(db: Session = Depends(get_db)):
+    """Function that returns all feeediong stations"""
+    stations = db.query(FeedingStation_Model).all()
+    if not stations:
+        raise HTTPException(status_code=404, detail="No feedingstations found, db empty")
+    return stations
+
 @router.post("/register")
 def register(feedingstation: createFeedingstation, db: Session = Depends(get_db)):
 
