@@ -6,6 +6,6 @@ COPY . /opt/api/
 
 RUN pip install --no-cache-dir --upgrade -r ./requirements.txt
 
-EXPOSE 23451
+EXPOSE 443
 
-ENTRYPOINT ["python","./app/main.py"]  
+ENTRYPOINT ["python","./app/main.py"]
