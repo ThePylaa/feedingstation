@@ -1,7 +1,7 @@
 #include "DHT.h"
 
 //ATTENTION: PIN NUMBERs: D5 = 5, not 8 like in pinlayout
-#define DHTPIN 5
+#define DHTPIN 50
 ///
 
 
