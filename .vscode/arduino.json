@@ -1,8 +1,4 @@
 {
-    "configuration": "PartitionScheme=default,PinNumbers=default,USBMode=default",
     "board": "arduino:esp32:nano_nora",
-    "port": "COM5",
-    "programmer": "esptool",
-    "sketch": "arduino\\arduino.ino",
-    "output": "../ArduinoOutput"
+    "port": "COM5"
 }
