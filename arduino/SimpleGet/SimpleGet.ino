@@ -23,13 +23,12 @@ by Karl Söderby
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
+char server[] = API_HOST;    // name address for Google (using DNS)
+
 int keyIndex = 0;            // your network key index number (needed only for WEP)
 
 int status = WL_IDLE_STATUS;
-// if you don't want to use DNS (and reduce your sketch size)
-// use the numeric IP instead of the name for the server:
-//IPAddress server(74,125,232,128);  // numeric IP for Google (no DNS)
-char server[] = "foodstation-api--1601-1722.jollywater-b89aa434.germanywestcentral.azurecontainerapps.io";    // name address for Google (using DNS)
+
 
 // Initialize the Ethernet client library
 // with the IP address and port of the server
@@ -68,7 +67,7 @@ void setup() {
   if (client.connect(server, 443)) {
     Serial.println("connected to server");
     // Make a HTTP request:
-    client.println("GET /user/get_all_user HTTP/1.1");
+    client.println("GET /user/all_users HTTP/1.1");
     client.println("Host: " + String(server));
     client.println("Connection: close");
     client.println();
@@ -89,8 +88,20 @@ void loop() {
     Serial.println("disconnecting from server.");
     client.stop();
 
-    // do nothing forevermore:
-    while (true);
+  
+    Serial.println("\nStarting connection to server...");
+    // if you get a connection, report back via serial:
+    if (client.connect(server, 443)) {
+      Serial.println("connected to server");
+      // Make a HTTP request:
+      client.println("GET /user/all_users HTTP/1.1");
+      client.println("Host: " + String(server));
+      client.println("Connection: close");
+      client.println();
+    
+    delay(10000);
+  
+    };
   }
 }
 

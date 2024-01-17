@@ -9,11 +9,11 @@
 /////// WiFi Settings ///////
 char ssid[] = SECRET_SSID;
 char pass[] = SECRET_PASS;
+char uuid[] = DEVICE_UUID;
 
 char serverAddress[] = API_HOST;  // server address
-int port = 443;
 
-String uuid;
+int port = 443;
 
 // VERY IMPORTANT FOR HTTPs
 WiFiSSLClient wifi;
@@ -42,19 +42,22 @@ void setup() {
 }
 
 void loop() {
-  // Getting the UUID from the API. Neccessary for possible duplicants
-  Serial.println("Getting UUID from API");
-  client.get("/feedingstation/get_station_uuid");
 
-  // read the status code and body of the response
-  int statusCode = client.responseStatusCode();
-  uuid = client.responseBody();
-  client.stop();
+  while(true){
+    String res = registerStation("SIMON");
+    Serial.println(res);
+    Serial.println("Wait ten seconds");
+    delay(10000);
+  }
+  
+}
+
+//this function registers your Feedingstation in the DB
+String registerStation(String name){
 
   //register Station in the DB
   Serial.println("Register Station in the DB");
-  String postData = "{\"feedingstation_id\": " + uuid + ",\"name\": \"string\"}";
-  Serial.println(postData);
+  String postData = "{\"feedingstation_id\": \"" + String(uuid) + "\",\"name\": \"" + name + "\"}";
   client.beginRequest();
   client.post("/feedingstation/register");
   client.sendHeader("Content-Type", "application/json");
@@ -64,16 +67,8 @@ void loop() {
   client.print(postData);
   client.endRequest();
 
-  statusCode = client.responseStatusCode();
   String response = client.responseBody();
+  client.stop();
 
-  while(true){
-    Serial.print("Status code: ");
-    Serial.println(statusCode);
-    Serial.print("Response: ");
-    Serial.println(response);
-    Serial.println("Wait ten seconds");
-    delay(10000);
-  }
-  
+  return response;
 }
