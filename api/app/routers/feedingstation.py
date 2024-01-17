@@ -20,8 +20,20 @@ def get_all_stations(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No feedingstations found, db empty")
     return stations
 
+@router.get("/get_station_uuid")
+def get_station_uuid(db: Session = Depends(get_db)):
+    """Function that returns a uuid which isnt used yet"""
+    feedingstation_id = uuid4()
+
+    while db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation_id).first():
+        feedingstation_id = uuid4()
+
+    return feedingstation_id
+
+
 @router.post("/register")
 def register(feedingstation: createFeedingstation, db: Session = Depends(get_db)):
+    '''Function to register a new feedingstation. The user has to provide the feedingstation_id and the name. The feedingstation_id is stored in the database'''
 
     existing_station = db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation.feedingstation_id).first()
     if existing_station:
@@ -35,7 +47,7 @@ def register(feedingstation: createFeedingstation, db: Session = Depends(get_db)
 
 @router.put("/update_container_foodlevel")
 def update_container_foodlevel(feedingstation: updateFeedingstation, db: Session = Depends(get_db)):
-    """Function to update the foodlevel of a feedingstation. The user has to provide the feedingstation_id and the new foodlevel. The foodlevel is stored in the database."""
+    """Function to update the foodlevel of a feedingstation. The user has to provide the feedingstation_id and the new foodlevel. The foodlevel is stored in the database"""
     existing_station = db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation.feedingstation_id).first()
     if not existing_station:
         raise HTTPException(status_code=404, detail="Feedingstation not registered")
