@@ -32,3 +32,14 @@ def register(feedingstation: createFeedingstation, db: Session = Depends(get_db)
     db.commit()
     db.refresh(dbStation)
     return dbStation
+
+@router.put("/update_container_foodlevel")
+def update_container_foodlevel(feedingstation: updateFeedingstation, db: Session = Depends(get_db)):
+    """Function to update the foodlevel of a feedingstation. The user has to provide the feedingstation_id and the new foodlevel. The foodlevel is stored in the database."""
+    existing_station = db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation.feedingstation_id).first()
+    if not existing_station:
+        raise HTTPException(status_code=404, detail="Feedingstation not registered")
+    existing_station.container_foodlevel = feedingstation.container_foodlevel
+    db.commit()
+    db.refresh(existing_station)
+    return existing_station

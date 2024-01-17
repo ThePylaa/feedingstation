@@ -10,3 +10,7 @@ class Feedingstation(BaseModel):
 class createFeedingstation(BaseModel):
     feedingstation_id: uuid.UUID
     name: str
+
+class updateFeedingstation(BaseModel):
+    feedingstation_id: uuid.UUID
+    container_foodlevel: bool
