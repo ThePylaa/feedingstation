@@ -45,38 +45,54 @@ void setup() {
 }
 
 void loop() {
-  //checks for instructions of the other arduino
+  //checks for instructions from the other arduino
   serialInstruction[0] = 0;
   if (Serial2.available() > 0) {  
     serialInstruction[0] = Serial2.read(); 
   }
-  manageArduinoInput(atoi(serialInstruction)); // convert char to int
+  //recieved char has to be convertet to an int
+  manageArduinoInput(atoi(serialInstruction)); 
+
   delay(5000); 
 }
 
 void manageArduinoInput(int code){
-  switch(code){
-    case 0: 
-      //do nothing
-      Serial.println("Doing nothing");
-      break;
-    case 1: 
-      //dispense 1 time 
-      Serial.println("Dispensing food");
-      dispenseFood();
-      break;
-    case 2:
-      //get weight of scale
-      Serial.println("Returning scalevalue");
-      int weight = getFoodbowlWeight();
-      Serial2.print(weight);
-      Serial.println(weight);
-      break;
-    default:
-      Serial.println("False signal from arduino");
+  Serial.println(code);
+  if (code == 0){
+    Serial.println("Doing nothing");
+    return;
+  }else if(code == 1){
+    //dispense 1 time 
+    Serial.println("Dispensing food");
+    dispenseFood();
+    return;
+  }else if(code == 2){
+    //get weight of scale
+    Serial.println("Returning scalevalue");
+    int weight = getFoodbowlWeight();
+    Serial2.print(weight);
+    Serial.print("Weight: ");
+    Serial.println(weight);
+    return;
+  }else if(code == 3){
+    //returning foodlevelstatus barrier
+    Serial2.print(isBarrierBroken());
+    return;
+  }else if(code == 4){
+    //return humidity
+    Serial2.print(getHumidity());
+    return;
+  }else if(code == 5){
+    //return degrees in celcius
+    Serial2.print(getCelcius());
+    return;
+  }else{
+    Serial.println("False signal from arduino");
+    return;
   }
 }
 
+//dispenses food by turning the stepper motor
 void dispenseFood(){
   turnDegrees(60);
 }
