@@ -76,11 +76,15 @@ void manageArduinoInput(int code){
     return;
   }else if(code == 3){
     //returning foodlevelstatus barrier
-    Serial2.print(isBarrierBroken());
+    bool broken = isBarrierBroken();
+    Serial.print("Barrier is broken: ");
+    Serial.println(broken);
+    Serial2.print(broken);
     return;
   }else if(code == 4){
     //return humidity
-    Serial2.print(getHumidity());
+    float msg = getHumidity();
+    Serial2.print(msg);
     return;
   }else if(code == 5){
     //return degrees in celcius
@@ -92,7 +96,6 @@ void manageArduinoInput(int code){
   }
 }
 
-//dispenses food by turning the stepper motor
 void dispenseFood(){
   turnDegrees(60);
 }
