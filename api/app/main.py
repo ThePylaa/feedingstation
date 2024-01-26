@@ -2,22 +2,18 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
-
-
+from fastapi.responses import FileResponse
 from utils.db.db import engine, SessionLocal
-
-#Import different Models 
-from models import accepted_animalsmodel, animalmodel, feedingstationmodel, portionmodel, usermodel
-
-#Import different Routers 
-from routers import user, feedingstation
-
+from models import animalmodel, feedingstationmodel, portionmodel, usermodel
+from routers import user, feedingstation, portion, animal
 
 load_dotenv()
 
 #Generate Table
 usermodel.Base.metadata.create_all(bind=engine)
 feedingstationmodel.Base.metadata.create_all(bind=engine)
+portionmodel.Base.metadata.create_all(bind=engine)
+animalmodel.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
 
@@ -32,6 +28,8 @@ app = FastAPI(
 #Add Routes to the API
 app.include_router(user.router)
 app.include_router(feedingstation.router)
+app.include_router(portion.router)
+app.include_router(animal.router)
 
 #DB Middleware
 @app.middleware("http")
@@ -43,6 +41,10 @@ async def db_session_middleware(request: Request, call_next):
     finally:
         request.state.db.close()
     return response
+
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse('./app/assets/favicon.ico')
 
 if __name__ == "__main__":
     print(f"Started on {os.getenv('API_IP')}:{os.getenv('API_PORT')} with Mode {os.getenv('DEBUG')}")
