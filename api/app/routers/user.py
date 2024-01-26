@@ -63,6 +63,10 @@ def register(user: createUser, db: Session = Depends(get_db)):
         raise HTTPException(status_code=406, detail="Email already registered")
     
     uuid = uuid4()
+    # check if uuid is already in use
+    while db.query(User_Model).filter(User_Model.user_id == uuid).first():
+        uuid = uuid4()
+        
     hashed_password = hashPassword(user.password)
     dbUser = User_Model(user_id=uuid, email=user.email, forename=user.forename, lastname=user.lastname, password_hash=hashed_password)
     db.add(dbUser)
