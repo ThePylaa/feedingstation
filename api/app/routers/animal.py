@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from utils.db.db import get_db
 from models.animalmodel import Animal_Model
 from models.usermodel import User_Model
+from models.food_leftovermodel import Food_Leftover_Model
 from schemas.animal import *
+from uuid import uuid4
 
 
 router = APIRouter(tags=["animal"],prefix="/animal")
@@ -36,3 +38,34 @@ def register(animal: createAnimal, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(dbAnimal)
     return dbAnimal
+
+@router.post("/food_leftover")
+def post_food_leftover(food_leftover: postFoodLeftover, db: Session = Depends(get_db)):
+    '''Function to post the food leftover of an animal'''
+    # check if animal_rfid is registered
+    existing_animal = db.query(Animal_Model).filter(Animal_Model.animal_rfid == food_leftover.animal_rfid).first()
+    if not existing_animal:
+        raise HTTPException(status_code=404, detail="Animal not registered")
+    
+    uuid = uuid4()
+    #check if uuid is already in use
+    while db.query(Food_Leftover_Model).filter(Food_Leftover_Model.food_leftover_id == uuid).first():
+        uuid = uuid4()
+    
+    dbFood_leftover = Food_Leftover_Model(food_leftover_id=uuid, animal_rfid=food_leftover.animal_rfid, weight=food_leftover.weight, date=food_leftover.date)
+    
+    db.add(dbFood_leftover)
+    db.commit()
+    db.refresh(dbFood_leftover)
+    return dbFood_leftover
+
+@router.get("/food_leftover")
+def get_food_leftover(animal_rfid: str, db: Session = Depends(get_db)):
+    '''Function to get all food leftovers of an animal with their timestamps'''
+    # check if animal_rfid is registered
+    existing_animal = db.query(Animal_Model).filter(Animal_Model.animal_rfid == animal_rfid).first()
+    if not existing_animal:
+        raise HTTPException(status_code=404, detail="Animal not registered")
+    
+    return db.query(Food_Leftover_Model).filter(Food_Leftover_Model.animal_rfid == animal_rfid).all()
+  
