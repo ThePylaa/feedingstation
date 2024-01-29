@@ -1,6 +1,7 @@
 #include <ArduinoHttpClient.h>
 #include <WiFi.h>
 #include <WiFiSSLClient.h>
+#include <ArduinoJson.h>
 
 #include "arduino_secrets.h"
 
@@ -11,7 +12,6 @@ char pass[] = SECRET_PASS;
 char uuid[] = DEVICE_UUID;
 
 char serverAddress[] = API_HOST;  // server address
-
 int port = 443;
 
 // VERY IMPORTANT FOR HTTPs
@@ -19,6 +19,12 @@ WiFiSSLClient wifi;
 // -----------------------
 HttpClient client = HttpClient(wifi, serverAddress, port);
 int status = WL_IDLE_STATUS;
+
+//global vars
+JsonDocument schedule;
+int scheduleSize[10];
+String scheduleTime[10];
+String scheduleRFID[10];
 
 
 void setup() {
@@ -46,17 +52,15 @@ void setup() {
 void loop() {
   Serial.println("Starting routine!");
 
-  Serial.print("Checking Foodlevel..")
-  if(isBarrierbroken() == 1){
-    Serial.println(updateFoodlevel(1));
-  }else{
-    Serial.println(updateFoodlevel(0));
+  Serial.println("Getting schedule from DB");
+  if(!getSchedule(scheduleSize, scheduleTime, scheduleRFID)){
+    Serial.println("Couldn't get schedule, retrying next loop cicle!");
   }
-
-
+  Serial.println(scheduleTime[0]);
+  Serial.println(String(scheduleSize[0]));
+  Serial.println(scheduleRFID[0]);
 
   delay(10000);
-  
 }
 
 void doRoutine(){
@@ -80,6 +84,36 @@ void doRoutine(){
   //  dosmthWithGetWeight()!!!  
   //
   //}
+}
+
+//this function checks if an rfid chip is scanned and valid for eating time
+bool isValidRFID(){
+  return true;
+}
+
+//this function gets the schedule from the DB
+bool getSchedule(int* scheduleSize, String* scheduleTime, String* scheduleRFID) {
+  client.get(String("/portion/portions?feedingstation=" + String(uuid)));
+  String responseJson = client.responseBody();
+  client.stop();
+
+ 
+  DeserializationError error = deserializeJson(schedule, responseJson);
+
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    return false;
+  }
+
+  int index = 0;
+  for (JsonObject item : schedule.as<JsonArray>()) {
+    scheduleSize[index] = item["size"].as<int>(); // 20, 60, 60, 60, 60, 60, 60, 60, 60
+    scheduleRFID[index] = item["animal_rfid"].as<String>(); // "FAKERFID", "FAKERFID", "FAKERFID", "FAKERFID", ...
+    scheduleTime[index] = item["time"].as<String>(); // "16:55:19", "10:32:20.202000", "10:32:20.202000", "10:32:20.202000", ...
+    index++;
+  }
+  return true;
 }
 
 //this function registers your Feedingstation in the DB
