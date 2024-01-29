@@ -18,10 +18,10 @@ def get_all_animals(db: Session = Depends(get_db)):
 
 @router.post("/register")
 def register(animal: createAnimal, db: Session = Depends(get_db)):
-    '''Function to register a new animal. The user has to provide the animal_rfid_id, the user_id, the name and the type. The animal_rfid_id is stored in the database'''
+    '''Function to register a new animal. The user has to provide the animal_rfid, the user_id, the name and the type. The animal_rfid is stored in the database'''
 
-    # check if animal_rfid_id is already registered
-    existing_animal = db.query(Animal_Model).filter(Animal_Model.animal_rfid_id == animal.animal_rfid_id).first()
+    # check if animal_rfid is already registered
+    existing_animal = db.query(Animal_Model).filter(Animal_Model.animal_rfid == animal.animal_rfid).first()
     if existing_animal:
         raise HTTPException(status_code=406, detail="Animal / RFID already registered")
     
@@ -31,7 +31,7 @@ def register(animal: createAnimal, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not existing")
     
 
-    dbAnimal = Animal_Model(animal_rfid_id=animal.animal_rfid_id, user_id=animal.user_id, name=animal.name, type=animal.type)
+    dbAnimal = Animal_Model(animal_rfid=animal.animal_rfid, user_id=animal.user_id, name=animal.name, type=animal.type)
     db.add(dbAnimal)
     db.commit()
     db.refresh(dbAnimal)

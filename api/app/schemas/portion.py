@@ -6,4 +6,4 @@ class createPortion(BaseModel):
     time: time
     size: str
     feedingstation_id: uuid.UUID
-    animal_rfid_id: str
+    animal_rfid: str

@@ -23,15 +23,15 @@ def create_portion(portion: createPortion, db: Session = Depends(get_db)):
     while db.query(Portion_Model).filter(Portion_Model.portion_id == portion_id).first():
         portion_id = uuid.uuid4()
 
-    #check if animal_rfid_id is registered
-    if not db.query(Animal_Model).filter(Animal_Model.animal_rfid_id == portion.animal_rfid_id).first():
+    #check if animal_rfid is registered
+    if not db.query(Animal_Model).filter(Animal_Model.animal_rfid == portion.animal_rfid).first():
         raise HTTPException(status_code=404, detail="Animal not registered")
     
     #check if feedingstation_id is registered
     if not db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == portion.feedingstation_id).first():
         raise HTTPException(status_code=404, detail="Feedingstation not registered")
     
-    dbPortion = Portion_Model(portion_id=portion_id, time=portion.time, size=portion.size, feedingstation_id=portion.feedingstation_id, animal_rfid_id=portion.animal_rfid_id)
+    dbPortion = Portion_Model(portion_id=portion_id, time=portion.time, size=portion.size, feedingstation_id=portion.feedingstation_id, animal_rfid=portion.animal_rfid)
     db.add(dbPortion)
     db.commit()
     db.refresh(dbPortion)
