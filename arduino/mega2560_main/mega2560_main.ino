@@ -3,8 +3,8 @@
 #include "DHT.h"
 
 //for HX711
-#define DOUT  20
-#define CLK  21
+#define DOUT  36
+#define CLK  34
 HX711 scale;
 float calibration_factor = 2180;
 //---------
@@ -53,7 +53,7 @@ void loop() {
   //recieved char has to be convertet to an int
   manageArduinoInput(atoi(serialInstruction)); 
 
-  delay(5000); 
+  delay(500); 
 }
 
 void manageArduinoInput(int code){
@@ -64,7 +64,7 @@ void manageArduinoInput(int code){
   }else if(code == 1){
     //dispense 1 time 
     Serial.println("Dispensing food");
-    dispenseFood();
+    //dispenseFood();
     return;
   }else if(code == 2){
     //get weight of scale
@@ -92,6 +92,7 @@ void manageArduinoInput(int code){
     return;
   }else{
     Serial.println("False signal from arduino");
+    Serial2.print(999999);
     return;
   }
 }
