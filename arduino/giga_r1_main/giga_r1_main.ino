@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <WiFiSSLClient.h>
 #include <ArduinoJson.h>
+#include "RTClib.h" 
 
 #include "arduino_secrets.h"
 
@@ -20,12 +21,25 @@ WiFiSSLClient wifi;
 HttpClient client = HttpClient(wifi, serverAddress, port);
 int status = WL_IDLE_STATUS;
 
+//Real Time Clock 
+RTC_DS3231 rtc; 
+
 //global vars
 JsonDocument schedule;
-int scheduleSize[10];
-String scheduleTime[10];
-String scheduleRFID[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
+int scheduleSize[10][10] ={0};
+String scheduleTime[10][10] = {
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""},
+  {"","","","","","","","","",""}
+  };
+String scheduleRFID[10] = {"","","","","","","","","",""};
 
 void setup() {
   Serial.begin(9600);
@@ -47,6 +61,14 @@ void setup() {
   IPAddress ip = WiFi.localIP();
   Serial.print("IP Address: ");
   Serial.println(ip);
+
+  //start realtime clock 
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }else{
+    Serial.println("RTC started!");
+  }
 }
 
 void loop() {
@@ -54,38 +76,28 @@ void loop() {
 
   Serial.println("Getting schedule from DB");
 
-  if(!getSchedule(scheduleSize, scheduleTime, scheduleRFID)){
+  if(!getSchedule()){
     Serial.println("Couldn't get schedule, retrying next loop cicle!");
+  }else{
+    Serial.println("Fetched schedule!");
   }
 
-  for(String rfid : scheduleRFID){
-    Serial.println(rfid);
-  }
+  printSchedule();
+
+  DateTime now = getTime();
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
 
   delay(10000);
 }
 
+//function that runs the basic update routine
 void doRoutine(){
-  //if(!isValidRFID()){
-  //  return;  
-  //}
-  //if(currenttime >= scheduleTimes){
-  // 
-  //  if (getWeight() > 5){
-  //    delay(5000);
-  //    if(getWeight() > 5){
-  //      sendNoticicationToUser();
-  //      return;
-  //    }
-  //  }
-  //  for(int i = 0; i<schedulePortions; i++){
-  //    dispenseFood();
-  //  }
-  //  delay(9999999);
-  //    
-  //  dosmthWithGetWeight()!!!  
-  //
-  //}
+
 }
 
 //this function checks if an rfid chip is scanned and valid for eating time
@@ -94,9 +106,9 @@ bool isValidRFID(){
 }
 
 //this function gets the schedule from the DB
-bool getSchedule(int* scheduleSize, String* scheduleTime, String* scheduleRFID) {
-  try {
-    client.get(String("/portion/portions?feedingstation=" + String(uuid)));
+bool getSchedule() {
+
+  client.get(String("/portion/portions?feedingstation=" + String(uuid)));
   String responseJson = client.responseBody();
   client.stop();
 
@@ -108,18 +120,20 @@ bool getSchedule(int* scheduleSize, String* scheduleTime, String* scheduleRFID) 
     return false;
   }
 
-  int index = 0;
-  Serial.println(responseJson);
+  //now get the schedule times and sizes of each scheduleRFID
+  int animalIndex = 0; 
   for (JsonObject item : schedule.as<JsonArray>()) {
-    scheduleRFID[index] = item["animal_rfid"].as<String>();
-    index++;
+    scheduleRFID[animalIndex] = item["animal_rfid"].as<String>();
+    int portionIndex = 0;
+    for (JsonObject portion : item["portions"].as<JsonArray>()) {
+      scheduleTime[animalIndex][portionIndex] = portion["time"].as<String>();
+      scheduleSize[animalIndex][portionIndex] = portion["size"].as<int>();
+      portionIndex++;
+    }
+    animalIndex++;
   }
-  return true;
 
-  } catch(const std::exception& e) {
-    Serial.println("Couldn't get schedule, retrying next loop cicle!");
-    return false;
-  }
+  return true;
 }
 
 //this function registers your Feedingstation in the DB
@@ -212,4 +226,31 @@ void dispenseFood(){
   return;
 }
 
+//get current time
+DateTime getTime(){
+  return rtc.now();
+}
+
+//debug printing
+void printSchedule(){
+  int scheduleRFIDLength = sizeof(scheduleRFID) / sizeof(scheduleRFID[0]);
+  for (int i = 0; i < scheduleRFIDLength; i++)
+  {
+    //print all RFID's and their portions and times for debugging
+    if(scheduleRFID[i] != ""){
+        Serial.println(scheduleRFID[i]);
+      }
+    int scheduleTimeLength = sizeof(scheduleTime[i]) / sizeof(scheduleTime[i][0]);
+    for (int j = 0; j < scheduleTimeLength; j++)
+    {
+      if(scheduleTime[i][j] != ""){
+        Serial.println(scheduleTime[i][j]);
+      }
+
+      if(scheduleSize[i][j] != 0){
+        Serial.println(scheduleSize[i][j]);
+      }  
+    }
+  }
+}
 
