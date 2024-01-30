@@ -82,27 +82,88 @@ void loop() {
     Serial.println("Fetched schedule!");
   }
 
-  printSchedule();
+  delay(500);
 
-  DateTime now = getTime();
-  Serial.print(now.hour(), DEC);
-  Serial.print(':');
-  Serial.print(now.minute(), DEC);
-  Serial.print(':');
-  Serial.print(now.second(), DEC);
-  Serial.println();
+  doMainRoutine();
 
+  Serial.println("Sleeping for 10 seconds...");
   delay(10000);
 }
 
-//function that runs the basic update routine
-void doRoutine(){
+void doMainRoutine(){
+  DateTime now = getTime();
 
+  //Check if an RFID is present
+  String currRFID = getRFID();
+  if(currRFID == ""){
+    return;
+  }
+  Serial.println("Found RFID tag");
+
+  //Check if RFID is known and has an uneaten portion
+  int portionSize = isAllowedToEat(currRFID, now); 
+  if(portionSize == 0){
+    Serial.println("Not allowed to eat right now!");
+    return;
+  }
+
+  //Check if weight is on the scale
+  Serial.println("Checking Foodbowl...");
+  int scaleTimer = 0;
+  while(getWeight() > 10){
+    Serial.println("The foodbowl isn't empty, not dispensing any food!");
+    if(scaleTimer >= 10){
+      return;
+    }
+    delay(1000);
+    scaleTimer++;
+  }
+
+  //dispenses food 
+  Serial.print("Dispensing ");
+  Serial.print(portionSize);
+  Serial.println(" portions");
+
+  for(int i = 0; i<portionSize; i++){
+    dispenseFood();
+    delay(1000);
+  }
 }
 
-//this function checks if an rfid chip is scanned and valid for eating time
-bool isValidRFID(){
-  return true;
+//this function checks if the given RFID is allowed to eat something. Returns 0 if RFID isn't allowed
+int isAllowedToEat(String scannedRFID, DateTime currTime){
+
+  int scheduleRFIDLength = sizeof(scheduleRFID) / sizeof(scheduleRFID[0]);
+  for (int i = 0; i < scheduleRFIDLength; i++){
+    //check if RFID is known in schedule
+    if(scheduleRFID[i] != "" && scheduleRFID[i] == scannedRFID){
+      Serial.print("RFID known: ");
+      Serial.println(scheduleRFID[i]);
+
+      //check if RFID has an uneaten portion
+      int scheduleTimeLength = sizeof(scheduleTime[i]) / sizeof(scheduleTime[i][0]);
+      for (int j = 0; j < scheduleTimeLength; j++){
+        if(scheduleTime[i][j] != "" && scheduleTime[i][j].substring(0, 2).toInt() <= currTime.hour()){
+          if(scheduleTime[i][j].substring(0, 2).toInt() == currTime.hour() && scheduleTime[i][j].substring(3, 5).toInt() > currTime.minute()){
+            return 0;
+          }
+          //TODO check if already taken or not
+            Serial.print("Is allowed to eat: ");
+            Serial.println(scheduleSize[i][j]);
+            return scheduleSize[i][j];
+        } 
+      }
+    }
+  }
+  return 0;
+}
+
+
+//this function checks if an rfid chip is scanned and returns it TODO TODO TODO TODO
+String getRFID(){
+  //return "NochNeFakeId";
+  return "FAKERFID";
+  //return "";
 }
 
 //this function gets the schedule from the DB
