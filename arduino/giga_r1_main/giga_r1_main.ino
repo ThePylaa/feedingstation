@@ -74,8 +74,10 @@ void setup() {
 void loop() {
   Serial.println("Starting routine!");
 
-  Serial.println("Getting schedule from DB");
+  Serial.println("Updating DB");
+  updateServerData();
 
+  Serial.println("Getting schedule from DB");
   if(!getSchedule()){
     Serial.println("Couldn't get schedule, retrying next loop cicle!");
   }else{
@@ -88,6 +90,13 @@ void loop() {
 
   Serial.println("Sleeping for 10 seconds...");
   delay(10000);
+}
+
+void updateServerData(){
+  String humidity = String(getHumidity());
+  updateHumidity(humidity);
+  bool broke = isBarrierbroken();
+  updateFoodlevel(broke);
 }
 
 void doMainRoutine(){
@@ -113,6 +122,7 @@ void doMainRoutine(){
   while(getWeight() > 10){
     Serial.println("The foodbowl isn't empty, not dispensing any food!");
     if(scaleTimer >= 10){
+      //send animal didnt eat up to server
       return;
     }
     delay(1000);
@@ -233,6 +243,20 @@ String updateFoodlevel(bool broken){
   return response;
 }
 
+String updateHumidity(String humidity){
+  String contentType = "application/json";
+  String putData =  "{\"feedingstation_id\": \"" + String(uuid) + "\",\"humidity\": \"" + humidity + "\"}";
+
+  Serial.print("Updating humidity to: ");
+  Serial.println(humidity);
+  client.put("/feedingstation/update_humidity", contentType, putData);
+
+  String response = client.responseBody();
+  client.stop();
+
+  return response;
+}
+
 //sends signal to the other arduino and returns answer
 String sendInstruction(int code){
   //Serial.println(code);
@@ -258,9 +282,9 @@ float getCelcius(){
 }
 
 //get humidity from other arduino sensor
-float getHumidity(){
-    // Convert String to float
+float getHumidity(){ 
     String responseStr = sendInstruction(4);
+    // Convert String to float
     float response = responseStr.toFloat();
     return response;
 }
