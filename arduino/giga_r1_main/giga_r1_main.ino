@@ -24,7 +24,7 @@ int status = WL_IDLE_STATUS;
 JsonDocument schedule;
 int scheduleSize[10];
 String scheduleTime[10];
-String scheduleRFID[10];
+String scheduleRFID[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
 void setup() {
@@ -33,7 +33,7 @@ void setup() {
 
   while ( status != WL_CONNECTED) {
     Serial.print("Attempting to connect to Network named: ");
-    Serial.println(ssid);                   // print the network name (SSID);
+    Serial.println(ssid);                   
 
     // Connect to WPA/WPA2 network:
     status = WiFi.begin(ssid, pass);
@@ -53,12 +53,14 @@ void loop() {
   Serial.println("Starting routine!");
 
   Serial.println("Getting schedule from DB");
+
   if(!getSchedule(scheduleSize, scheduleTime, scheduleRFID)){
     Serial.println("Couldn't get schedule, retrying next loop cicle!");
   }
-  Serial.println(scheduleTime[0]);
-  Serial.println(String(scheduleSize[0]));
-  Serial.println(scheduleRFID[0]);
+
+  for(String rfid : scheduleRFID){
+    Serial.println(rfid);
+  }
 
   delay(10000);
 }
@@ -93,11 +95,11 @@ bool isValidRFID(){
 
 //this function gets the schedule from the DB
 bool getSchedule(int* scheduleSize, String* scheduleTime, String* scheduleRFID) {
-  client.get(String("/portion/portions?feedingstation=" + String(uuid)));
+  try {
+    client.get(String("/portion/portions?feedingstation=" + String(uuid)));
   String responseJson = client.responseBody();
   client.stop();
 
- 
   DeserializationError error = deserializeJson(schedule, responseJson);
 
   if (error) {
@@ -107,13 +109,17 @@ bool getSchedule(int* scheduleSize, String* scheduleTime, String* scheduleRFID) 
   }
 
   int index = 0;
+  Serial.println(responseJson);
   for (JsonObject item : schedule.as<JsonArray>()) {
-    scheduleSize[index] = item["size"].as<int>(); // 20, 60, 60, 60, 60, 60, 60, 60, 60
-    scheduleRFID[index] = item["animal_rfid"].as<String>(); // "FAKERFID", "FAKERFID", "FAKERFID", "FAKERFID", ...
-    scheduleTime[index] = item["time"].as<String>(); // "16:55:19", "10:32:20.202000", "10:32:20.202000", "10:32:20.202000", ...
+    scheduleRFID[index] = item["animal_rfid"].as<String>();
     index++;
   }
   return true;
+
+  } catch(const std::exception& e) {
+    Serial.println("Couldn't get schedule, retrying next loop cicle!");
+    return false;
+  }
 }
 
 //this function registers your Feedingstation in the DB
