@@ -42,7 +42,7 @@ def register(feedingstation: createFeedingstation, db: Session = Depends(get_db)
     return dbStation
 
 @router.put("/update_container_foodlevel")
-def update_container_foodlevel(feedingstation: updateFeedingstation, db: Session = Depends(get_db)):
+def update_container_foodlevel(feedingstation: updateFoodlevel, db: Session = Depends(get_db)):
     """Function to update the foodlevel of a feedingstation. The user has to provide the feedingstation_id and the new foodlevel. The foodlevel is stored in the database"""
     existing_station = db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation.feedingstation_id).first()
     if not existing_station:
@@ -59,3 +59,23 @@ def get_container_foodlevel(feedingstation_id: str, db: Session = Depends(get_db
     if not existing_station:
         raise HTTPException(status_code=404, detail="Feedingstation not registered")
     return existing_station.container_foodlevel
+
+@router.put("/update_humidity")
+def update_humidity(feedingstation: updateHumidity, db: Session = Depends(get_db)):
+    """Function to update the humidity of a feedingstation. The user has to provide the feedingstation_id and the new humidity. The humidity is stored in the database"""
+    existing_station = db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation.feedingstation_id).first()
+    if not existing_station:
+        raise HTTPException(status_code=404, detail="Feedingstation not registered")
+    existing_station.humidity = feedingstation.humidity
+    db.commit()
+    db.refresh(existing_station)
+    return existing_station
+
+@router.get("/humidity")
+def get_humidity(feedingstation_id: str, db: Session = Depends(get_db)):
+    """Function to get the humidity of a feedingstation. The user has to provide the feedingstation_id. The humidity is returned"""
+    existing_station = db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation_id).first()
+    if not existing_station:
+        raise HTTPException(status_code=404, detail="Feedingstation not registered")
+    return existing_station.humidity
+

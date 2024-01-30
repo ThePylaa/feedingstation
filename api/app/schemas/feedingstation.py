@@ -6,11 +6,16 @@ class Feedingstation(BaseModel):
     user_id: uuid.UUID
     name: str
     container_foodlevel: bool
+    humidity: str
 
 class createFeedingstation(BaseModel):
     feedingstation_id: uuid.UUID
     name: str
 
-class updateFeedingstation(BaseModel):
+class updateFoodlevel(BaseModel):
     feedingstation_id: uuid.UUID
     container_foodlevel: bool
+
+class updateHumidity(BaseModel):
+    feedingstation_id: uuid.UUID
+    humidity: str
