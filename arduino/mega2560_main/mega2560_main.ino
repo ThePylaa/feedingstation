@@ -10,7 +10,7 @@ float calibration_factor = 2180;
 //---------
 
 //for DHT11
-#define DHTPIN 53
+#define DHTPIN 30
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 //----------
@@ -21,7 +21,7 @@ Stepper Motor(SPU, 37,35,33,31);
 //----------------
 
 //for lightbarrier
-#define LBP 23
+#define LBP 40
 //----------------
 
 //global variables
