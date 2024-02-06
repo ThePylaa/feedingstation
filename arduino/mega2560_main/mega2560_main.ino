@@ -25,80 +25,80 @@ Stepper Motor(SPU, 37,35,33,31);
 //----------------
 
 //global variables
-char serialInstruction[1];
+int inputInt = 0;
 //-----------------
 
 void setup() {
+  //Fake Motor LED
+  pinMode(22, OUTPUT);
+
+  //USB communivcation with raspi
   Serial.begin(9600);
-  //for communication with other arduino, SERIAL2 = TX2/RX2
-  Serial2.begin(9600);
 
-  Motor.setSpeed(20);
-
+  //Setup for scale
   scale.begin(DOUT, CLK);
   scale.tare();
   scale.set_scale(calibration_factor);
 
+  //Humidity / Celcius sensor
   dht.begin();
 
+  //Lightbarrier
   pinMode(LBP, INPUT);
 }
 
 void loop() {
-  //checks for instructions from the other arduino
-  serialInstruction[0] = 0;
-  if (Serial2.available() > 0) {  
-    serialInstruction[0] = Serial2.read(); 
-  }
-  //recieved char has to be convertet to an int
-  manageArduinoInput(atoi(serialInstruction)); 
+  //checks for instructions from the raspi
+  //Needs to be -48 bc of ASCII-Byte-Int conversion
+  if(Serial.available() > 0) inputInt = Serial.read() - 48; 
 
-  delay(500); 
+  if(inputInt > 0){
+    //recieved char has to be convertet to an int
+    manageArduinoInput(inputInt);
+  }
+  
+  inputInt = 0;
+
+  delay(100); 
 }
 
+//!!! It's impoortant that the Serial terminates the data with \n otherwise the
+//raspberry can
 void manageArduinoInput(int code){
-  Serial.println(code);
-  if (code == 0){
-    Serial.println("Doing nothing");
-    return;
-  }else if(code == 1){
+  if(code == 1){
     //dispense 1 time 
-    Serial.println("Dispensing food");
-    //dispenseFood();
+    dispenseFood();
     return;
   }else if(code == 2){
     //get weight of scale
-    Serial.println("Returning scalevalue");
     int weight = getFoodbowlWeight();
-    Serial2.print(weight);
-    Serial.print("Weight: ");
     Serial.println(weight);
     return;
   }else if(code == 3){
     //returning foodlevelstatus barrier
     bool broken = isBarrierBroken();
-    Serial.print("Barrier is broken: ");
     Serial.println(broken);
-    Serial2.print(broken);
     return;
   }else if(code == 4){
     //return humidity
     float msg = getHumidity();
-    Serial2.print(msg);
+    Serial.println(msg);
     return;
   }else if(code == 5){
     //return degrees in celcius
-    Serial2.print(getCelcius());
+    Serial.println(getCelcius());
     return;
   }else{
-    Serial.println("False signal from arduino");
-    Serial2.print(999999);
+    Serial.println("False command");
     return;
   }
 }
 
 void dispenseFood(){
-  turnDegrees(60);
+  digitalWrite(22, HIGH);
+  delay(250);
+  digitalWrite(22, LOW);
+
 }
 
 //gets weight of the foodbowl in gramms 
