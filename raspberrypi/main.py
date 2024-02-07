@@ -1,10 +1,10 @@
-from arduinoCommunication import isBarrierBroke, getTemperature, getHumidity, getFoodbowlWeight, dispensePortion
+from arduinoCommunication import isBarrierBroke, getTemperature, getHumidity, getFoodbowlWeight, dispensePortion, getRFID
 import time 
 from dotenv import load_dotenv
 import os
 import requests
 import json
-
+from datetime import datetime
 
 # Load the environment variables
 load_dotenv()
@@ -46,42 +46,40 @@ def hasInternet():
 
 if __name__ == "__main__":
     # Main loop
-    # Two different modes, one for when the device has internet and one for when it doesn't
-    exit()
+    lastServerUpdate = time.time() - 300
+
     while True:
-        if hasInternet():
-            # If the device has internet, it will update the server with the current status of the feeding station
-            # and get the schedule from the server
-            updateServer()
-            getSchedule()
-            time.sleep(5)
-            try:
-                with open("schedule.json", "r") as file:
-                    schedule = json.loads(file.read())
-                    print(schedule)
-                    for portion in schedule:
-                        if time.time() > portion["time"]:
-                            dispensePortion(portion["amount"])
-                            schedule.remove(portion)
-                            with open("schedule.json", "w") as file:
-                                file.write(json.dumps(schedule))
-            except Exception as e:
-                print(e)
-                print("Failed to dispense food")
-        else:
-            # If the device doesn't have internet, it will use the schedule.json file to dispense food
-            try:
-                with open("schedule.json", "r") as file:
-                    schedule = json.loads(file.read())
-                    print(schedule)
-                    for portion in schedule:
-                        if time.time() > portion["time"]:
-                            dispensePortion(portion["amount"])
-                            schedule.remove(portion)
-                            with open("schedule.json", "w") as file:
-                                file.write(json.dumps(schedule))
-            except Exception as e:
-                print(e)
-                print("Failed to dispense food")
-            time.sleep(5)
+        print("Main loop")
+
+        #the server will be updated every 5 minutes but the schedule will be checked every 10 seconds
+        if time.time() - lastServerUpdate > 300:
+            lastServerUpdate = time.time()
+            if hasInternet():
+                print("Updating server and getting schedule")
+                updateServer()
+                getSchedule()
+
+        # Check if rfid is present
+        rfid = getRFID()
+
+        # If rfid is present, check if the rfid is in the schedule
+        if rfid:
+            with open("schedule.json", "r") as file:
+                schedule = json.loads(file.read())
+                for animal in schedule:
+                    if animal["animal_rfid"] == rfid:
+                        print("RFID found in schedule")
+                        # If the rfid is in the schedule, dispense a portion of food if the time of the last portion is smaller than the current time
+                        for portion in animal["portions"]:
+                            if datetime.now() > datetime.strptime(portion["time"], "%H:%M:%S"):
+                                print(f"Dispensing %s portions of food" % portion["size"])
+                                for i in range(portion["size"]):
+                                    dispensePortion()
+                                    time.sleep(2)
+                                animal["portions"].remove(portion)
+                                with open("schedule.json", "w") as file:
+                                    file.write(json.dumps(schedule))
+                                break    
+        
+        time.sleep(2)
 
