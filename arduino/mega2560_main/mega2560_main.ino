@@ -1,6 +1,9 @@
 #include <Stepper.h> 
 #include "HX711.h"
 #include "DHT.h"
+#include <Rfid134.h>
+#include <ArduinoJson.h>
+
 
 //for HX711
 #define DOUT  36
@@ -26,6 +29,7 @@ Stepper Motor(SPU, 37,35,33,31);
 
 //global variables
 int inputInt = 0;
+JsonDocument payload;
 //-----------------
 
 void setup() {
@@ -34,6 +38,9 @@ void setup() {
 
   //USB communivcation with raspi
   Serial.begin(9600);
+
+  //Serial2 is used for the RFID sensor
+  Serial2.begin(9600);
 
   //Setup for scale
   scale.begin(DOUT, CLK);
@@ -45,6 +52,8 @@ void setup() {
 
   //Lightbarrier
   pinMode(LBP, INPUT);
+
+
 }
 
 void loop() {
@@ -57,13 +66,29 @@ void loop() {
     manageArduinoInput(inputInt);
   }
   
+  char rfidRaw[14] = "----NORFID----";
+  getRfid(rfidRaw);
+  String rfidString;
+  for (int i = 0; i < 14; i++) {
+    rfidString += rfidRaw[i];
+  }
+
+  payload["rfid"]     = rfidString;
+  payload["weight"]   = getFoodbowlWeight();
+  payload["humidity"] = getHumidity();
+  payload["temp"]     = getCelcius();
+  payload["broken"]   = isBarrierBroken();
+  serializeJson(payload, Serial);
+
+  Serial.print("\n");
+  
   inputInt = 0;
 
-  delay(100); 
+  delay(1000); 
 }
 
 //!!! It's impoortant that the Serial terminates the data with \n otherwise the
-//raspberry can
+//raspberry can't recognize the end of the payload -> code freezes
 void manageArduinoInput(int code){
   if(code == 1){
     //dispense 1 time 
@@ -98,7 +123,6 @@ void dispenseFood(){
   digitalWrite(22, HIGH);
   delay(250);
   digitalWrite(22, LOW);
-
 }
 
 //gets weight of the foodbowl in gramms 
@@ -129,3 +153,62 @@ bool isBarrierBroken(){
   }
   return true;
 }
+
+void getRfid(char* getString){
+  char asciiRfidCardNum[10];
+  char asciiRfidCountry[4];
+  int newInt;
+  int index = 0;
+  int inputBuffer[30];
+
+  //read input from rfid sensor module
+  while (Serial2.available()) {
+    newInt = Serial2.read();
+    inputBuffer[index] = newInt;
+    index = index + 1;
+  }
+
+  //when there was an input
+  if (index != 0) {
+    
+    for (int i = 1; i <= 10; i++) {
+      asciiRfidCardNum[i - 1] = decToASCII(inputBuffer[i]);
+    }
+    for (int i = 11; i <= 14; i++) {
+      asciiRfidCountry[i - 11] = decToASCII(inputBuffer[i]);
+    }
+
+    //reverse arrays
+    reverseArray(asciiRfidCardNum, 10);
+    reverseArray(asciiRfidCountry, 4);
+
+    for (int i = 0; i < 14; i++) {
+      if (i<10){
+        getString[i] = asciiRfidCardNum[i];
+      }else{
+        getString[i] = asciiRfidCountry[i-10];
+      }
+
+    }
+  }
+}
+
+char decToASCII(int dezimal) {
+  return static_cast<char>(dezimal);
+}
+
+void reverseArray(char arr[], int length) {
+  int temp;
+  int start = 0;
+  int end = length - 1;
+
+  while (start < end) {
+    temp = arr[start];
+    arr[start] = arr[end];
+    arr[end] = temp;
+    start++;
+    end--;
+  }
+}
+
+

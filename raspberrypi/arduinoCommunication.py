@@ -1,5 +1,8 @@
 import serial
 import time
+import random
+import json
+
 # Open serial connection to arduino
 ser = serial.Serial('/dev/ttyACM0', 9600)
 # Wait for connection to be established
@@ -11,36 +14,40 @@ def dispensePortion():
     ser.write(b'1')
 
 def getFoodbowlWeight():
-    # Request the weight of the food bowl
-    ser.write(b'2')
-    # Read the response from the arduino
-    msg = ser.readline().decode("utf-8").strip()
-    # Return the weight
-    return msg
-
+    payload = recievePayload()
+    return payload["weight"]
+    
 def isBarrierBroke():
-    # Request the status of the barrier
-    ser.write(b'3')
-    # Read the response from the arduino
-    msg = ser.readline().decode("utf-8").strip()
-    # Return the status
-    if msg == "1":
-        return True
-    else:
-        return False
-
+    payload = recievePayload()
+    return payload["broken"]
+    
 def getHumidity():
-    # Request the humidity from the arduino
-    ser.write(b'4')
-    # Read the response from the arduino
-    msg = ser.readline().decode("utf-8").strip()
-    # Return the humidity
-    return msg
-
+    payload = recievePayload()
+    return payload["humidity"]
+   
 def getTemperature():
-    # Request the temperature from the arduino
-    ser.write(b'5')
-    # Read the response from the arduino
+    payload = recievePayload()
+    return payload["temp"]
+    
+def recievePayload():
     msg = ser.readline().decode("utf-8").strip()
-    # Return the temperature
-    return msg
+    while(not msg.startswith("{") or not msg.endswith("}")):
+        time.sleep(random.randint(0, 4) / 10)
+        msg = ser.readline().decode("utf-8").strip()
+
+    #RFID has to be converted to decimal
+    jsonPayload = json.loads(msg)
+    
+    #checks if rfid is present
+    if jsonPayload["rfid"] == "----NORFID----":
+        return jsonPayload
+    
+    #splits raw["rfid"] into a list of strings and converts them from hex to decimal
+    #first 10 characters are the RFID id
+    #last 4 characters are the country code
+    rfidID = int(jsonPayload["rfid"][:10], 16)
+    rfidCountryCode = int(jsonPayload["rfid"][10:], 16)
+
+    jsonPayload["rfid"] = str(rfidCountryCode)+str(rfidID)
+
+    return jsonPayload
