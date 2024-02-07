@@ -1,0 +1,37 @@
+[
+    {
+        "animal_rfid": "FAKERFID",
+        "portions": [
+            {
+                "time": "16:55:19",
+                "size": 1
+            },
+            {
+                "time": "10:32:20",
+                "size": 1
+            }
+        ]
+    },
+    {
+        "animal_rfid": "NochNeFakeId",
+        "portions": [
+            {
+                "time": "08:48:38",
+                "size": 2
+            }
+        ]
+    },
+    {
+        "animal_rfid": "900263000914387",
+        "portions": [
+            {
+                "time": "20:03:40",
+                "size": 3
+            },
+            {
+                "time": "13:12:40",
+                "size": 6
+            }
+        ]
+    }
+]
