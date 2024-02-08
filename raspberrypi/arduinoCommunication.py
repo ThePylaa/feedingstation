@@ -11,6 +11,7 @@ time.sleep(1)
 
 def dispensePortion():
     # Dispense 1 portion of food
+    clearBuffer()
     ser.write(b'1')
 
 def getFoodbowlWeight():
@@ -40,6 +41,8 @@ def recievePayload():
     # If the data is corruptet, the utf-8 decoder will throw an exception
     # The dummy payload is returned and thats tolerable
     try:
+        clearBuffer()
+
         msg = ser.readline().decode("utf-8").strip()
         while(not msg.startswith("{") or not msg.endswith("}")):
             time.sleep(random.randint(0, 4) / 10)
@@ -63,3 +66,8 @@ def recievePayload():
         return jsonPayload
     except Exception as e:
         return {'rfid': '----NORFID----', 'weight': 0, 'humidity': 0, 'temp': 0, 'broken': False}
+    
+def clearBuffer():
+    # Clear the serial buffer
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
