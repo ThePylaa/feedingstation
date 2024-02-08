@@ -1,4 +1,5 @@
-from arduinoCommunication import isBarrierBroke, getTemperature, getHumidity, getFoodbowlWeight, dispensePortion, getRFID
+from arduinoCommunication import *
+from rtc import *
 import time 
 from dotenv import load_dotenv
 import os
@@ -46,14 +47,14 @@ def hasInternet():
 
 if __name__ == "__main__":
     # Main loop
-    lastServerUpdate = time.time() - 300
+    lastServerUpdate = get_time_in_seconds() - 300
 
     while True:
         print("Main loop")
 
         #the server will be updated every 5 minutes but the schedule will be checked every 10 seconds
-        if time.time() - lastServerUpdate > 300:
-            lastServerUpdate = time.time()
+        if get_time_in_seconds() - lastServerUpdate > 300:
+            lastServerUpdate = get_time_in_seconds()
             if hasInternet():
                 print("Updating server and getting schedule")
                 updateServer()
@@ -71,7 +72,7 @@ if __name__ == "__main__":
                         print("RFID found in schedule")
                         # If the rfid is in the schedule, dispense a portion of food if the time of the last portion is smaller than the current time
                         for portion in animal["portions"]:
-                            if datetime.now() > datetime.strptime(portion["time"], "%H:%M:%S"):
+                            if get_rtcDateTime().time() > datetime.strptime(portion["time"], "%H:%M:%S").time():
                                 print(f"Dispensing %s portions of food" % portion["size"])
                                 for i in range(portion["size"]):
                                     dispensePortion()
