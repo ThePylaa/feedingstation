@@ -47,14 +47,14 @@ def hasInternet():
 
 if __name__ == "__main__":
     # Main loop
-    lastServerUpdate = get_time_in_seconds() - 300
+    lastServerUpdate = getTimeInSeconds() - 300
 
     while True:
         print("Main loop")
 
         #the server will be updated every 5 minutes but the schedule will be checked every 10 seconds
-        if get_time_in_seconds() - lastServerUpdate > 300:
-            lastServerUpdate = get_time_in_seconds()
+        if getTimeInSeconds() - lastServerUpdate > 300:
+            lastServerUpdate = getTimeInSeconds()
             if hasInternet():
                 print("Updating server and getting schedule")
                 updateServer()
@@ -72,7 +72,7 @@ if __name__ == "__main__":
                         print("RFID found in schedule")
                         # If the rfid is in the schedule, dispense a portion of food if the time of the last portion is smaller than the current time
                         for portion in animal["portions"]:
-                            if get_rtcDateTime().time() > datetime.strptime(portion["time"], "%H:%M:%S").time():
+                            if getRtcDateTime().time() > datetime.strptime(portion["time"], "%H:%M:%S").time():
                                 print(f"Dispensing %s portions of food" % portion["size"])                               
                                 dispensePortion(portion["size"])
                                 time.sleep(0.27 * portion["size"])
