@@ -73,10 +73,9 @@ if __name__ == "__main__":
                         # If the rfid is in the schedule, dispense a portion of food if the time of the last portion is smaller than the current time
                         for portion in animal["portions"]:
                             if get_rtcDateTime().time() > datetime.strptime(portion["time"], "%H:%M:%S").time():
-                                print(f"Dispensing %s portions of food" % portion["size"])
-                                for i in range(portion["size"]):
-                                    dispensePortion()
-                                    time.sleep(2)
+                                print(f"Dispensing %s portions of food" % portion["size"])                               
+                                dispensePortion(portion["size"])
+                                time.sleep(0.27 * portion["size"])
                                 animal["portions"].remove(portion)
                                 with open("schedule.json", "w") as file:
                                     file.write(json.dumps(schedule))

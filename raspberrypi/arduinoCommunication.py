@@ -9,10 +9,10 @@ ser = serial.Serial('/dev/ttyACM0', 9600)
 time.sleep(1)
 
 
-def dispensePortion():
-    # Dispense 1 portion of food
+def dispensePortion(amount):
+    # Dispense amount portions of food
     clearBuffer()
-    ser.write(b'1')
+    ser.write(f"dispense{amount}".encode("utf-8"))
 
 def getFoodbowlWeight():
     payload = recievePayload()
