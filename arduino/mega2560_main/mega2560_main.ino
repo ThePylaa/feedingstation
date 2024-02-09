@@ -28,7 +28,7 @@ Stepper Motor(SPU, 37,35,33,31);
 //----------------
 
 //global variables
-int inputInt = 0;
+String inputBuffer;
 JsonDocument payload;
 //-----------------
 
@@ -58,12 +58,21 @@ void setup() {
 
 void loop() {
   //checks for instructions from the raspi
-  //Needs to be -48 bc of ASCII-Byte-Int conversion
-  if(Serial.available() > 0) inputInt = Serial.read() - 48; 
+  while(Serial.available() > 0){
+    char inChar = (char)Serial.read();
+    inputBuffer += inChar;
+  }
 
-  if(inputInt > 0){
-    //recieved char has to be convertet to an int
-    manageArduinoInput(inputInt);
+  //if instructions were send, process them
+  if(inputBuffer != "" && inputBuffer.startsWith("dispense")){
+    
+    String numStr = inputBuffer.substring(8); // extracts part after "dispense"
+    int amount = numStr.toInt(); // convert extracted String to int
+
+    for (int i = 0; i< amount; i++) {
+      dispenseFood();
+      delay(260);
+    }
   }
   
   char rfidRaw[14] = "----NORFID----";
@@ -79,44 +88,13 @@ void loop() {
   payload["temp"]     = getCelcius();
   payload["broken"]   = isBarrierBroken();
   serializeJson(payload, Serial);
-
+  //!!! It's impoortant that the Serial terminates the data with \n otherwise the
+  //raspberry can't recognize the end of the payload -> code freezes
   Serial.print("\n");
+
+  inputBuffer = "";
   
-  inputInt = 0;
-
   delay(1000); 
-}
-
-//!!! It's impoortant that the Serial terminates the data with \n otherwise the
-//raspberry can't recognize the end of the payload -> code freezes
-void manageArduinoInput(int code){
-  if(code == 1){
-    //dispense 1 time 
-    dispenseFood();
-    return;
-  }else if(code == 2){
-    //get weight of scale
-    int weight = getFoodbowlWeight();
-    Serial.println(weight);
-    return;
-  }else if(code == 3){
-    //returning foodlevelstatus barrier
-    bool broken = isBarrierBroken();
-    Serial.println(broken);
-    return;
-  }else if(code == 4){
-    //return humidity
-    float msg = getHumidity();
-    Serial.println(msg);
-    return;
-  }else if(code == 5){
-    //return degrees in celcius
-    Serial.println(getCelcius());
-    return;
-  }else{
-    Serial.println("False command");
-    return;
-  }
 }
 
 void dispenseFood(){
