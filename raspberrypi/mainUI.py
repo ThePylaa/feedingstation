@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import font as tkfont
 from tkinter import *
 import subprocess
@@ -8,7 +9,7 @@ class MainApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.after(1000, self.attributes, '-fullscreen', True)
+        self.after(2000, self.attributes, '-fullscreen', True)
         
         self.main_font = tkfont.Font(family='Helvetica', size=14, weight="normal")
 
@@ -196,18 +197,26 @@ class WifiSetup(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
+        available_networks = self.scan_wifi()
+
         can = Canvas(self, height=480, width=800)
         can.place(relx=0.5, rely=0.5, anchor=CENTER)
 
         label = tk.Label(can, text="Wählen Sie ein WLAN-Netzwerk:", font=controller.main_font, height=2, width=35)
         label.pack(side="top", fill="x", pady=10)
 
-        # Dropdown with available networks
-        self.ssid_var = tk.StringVar()
-        self.ssid_var.set("Netzwerk wählen")
-        self.ssid_menu = tk.OptionMenu(can, self.ssid_var, *self.scan_wifi())
-        self.ssid_menu.config(bg="blue", fg="white", padx=5)
-        self.ssid_menu.pack()
+        # available networks
+        # Listbox für die Netzwerkliste
+        network_list = Listbox(can, font=("Arial", 12))
+        network_list.pack(padx=10, pady=10)
+
+        # Einfügen der Netzwerke in die Listbox
+        for network in available_networks:
+            network_list.insert(END, network)
+
+        # Funktion zum Abrufen des ausgewählten Netzwerks
+        def get_selected_network():
+            return network_list.get(network_list.curselection()[0])
 
         # button to update the list of available networks
         global refreshImage
@@ -216,41 +225,42 @@ class WifiSetup(tk.Frame):
         update_button.pack()
 
         # password input
-        password_var = tk.StringVar()
+        self.password_var = tk.StringVar()
         tk.Label(can, text="Passwort:", font=("Arial", 12), height=2, width=35).pack()
-        password_entry = tk.Entry(can, textvariable=password_var, show="*")
+        password_entry = tk.Entry(can, textvariable=self.password_var, show="*")
         password_entry.pack()
         password_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
         password_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
 
         # button to connect to the selected network
-        connect_button = tk.Button(can, text="Verbinden", command=lambda: self.connect_to_wifi(self.ssid_var.get(), password_var.get()), pady=10, background="grey", foreground="white", font=controller.main_font)
+        connect_button = tk.Button(can, text="Verbinden", command=lambda: self.connect_to_wifi(get_selected_network(), self.password_var.get()), pady=10, background="grey", foreground="white", font=controller.main_font)
         connect_button.pack()
 
         close_window_button = tk.Button(can, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
         close_window_button.pack()
 
     def scan_wifi(self):
-        # networks = subprocess.check_output(["sudo", "iwlist", "wlan0", "scan"])
-        # networks = networks.decode("utf-8") # converts the bytes to a string
-        # networks = networks.split("\n")     # splits the string into a list
-        # wifi_list = []
+        networks = subprocess.check_output(["sudo", "iwlist", "wlan0", "scan"])
+        networks = networks.decode("utf-8") # converts the bytes to a string
+        networks = networks.split("\n")     # splits the string into a list
+        wifi_list = []
 
-        # for line in networks:
-        #     if "ESSID" in line:
-        #         wifi_list.append(line.split('"')[1])
-        wifi_list = ["Wiufi1", "Demo2"]
+        for line in networks:
+            if "ESSID" in line:
+                wifi_list.append(line.split('"')[1])
 
         return wifi_list
 
     def update_networks(self):
         self.ssid_menu["menu"].delete(0, "end")
         for ssid in self.scan_wifi():
-            ssid = "New Network"
             self.ssid_menu["menu"].add_command(label=ssid, command=lambda ssid=ssid: self.ssid_var.set(ssid))
 
-    def connect_to_wifi(ssid, password):
-        #os.system('sudo raspi-config nonint do_wifi_ssid_passphrase ' + ssid + " " + password)
+    def connect_to_wifi(self, ssid, password):
+        if not ssid:
+            print("Please select a network")
+            return
+        os.system('sudo raspi-config nonint do_wifi_ssid_passphrase ' + ssid + " " + password)
         print(f"Verbindung zu {ssid} mit Passwort {password} wird hergestellt...")
 
 
