@@ -1,5 +1,5 @@
-import tkinter as tk                
-from tkinter import font as tkfont  
+import tkinter as tk
+from tkinter import font as tkfont
 from tkinter import *
 import subprocess
 import os
@@ -8,36 +8,165 @@ class MainApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-
+        self.geometry("800x480")
+        self.after(1000, self.attributes, '-fullscreen', True)
+        
         self.main_font = tkfont.Font(family='Helvetica', size=14, weight="normal")
 
-        # the container is where we'll stack a bunch of frames
-        # on top of each other, then the one we want visible
-        # will be raised above the others
+        # Container for stacking frames
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        
-
+        # Dictionary of frames
         self.frames = {}
         for F in (WelcomePage, WifiSetup, PageTwo):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
-
-            # put all of the pages in the same location;
-            # the one on the top of the stacking order
-            # will be the one that is visible.
             frame.grid(row=0, column=0, sticky="nsew")
 
+        # Virtual keyboard setup (initially hidden)
+        self.keyboard_shift = False
+        self.keyboard_frame = tk.Frame(self, bg="lightgray")
+        self.keyboard_frame.pack(side="bottom", fill="x")
+        self.create_keyboard()
+
+        # Show welcome page
         self.show_frame("WelcomePage")
+        self.hide_keyboard()
 
     def show_frame(self, page_name):
-        '''Show a frame for the given page name'''
+        """Show a frame for the given page name"""
         frame = self.frames[page_name]
         frame.tkraise()
+
+    def create_keyboard(self):
+        """Creates the virtual keyboard layout"""
+        keyboard_buttons = [
+            ["!", '"', "#", "$", "%", "&", "/", "(", ")", "?"],
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Hide"],
+            ["q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "DEL"],
+            ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+            ["Shift", "y", "x", "c", "Space", "v", "b", "n", "m"]
+            
+        ]
+
+
+        for row, key_list in enumerate(keyboard_buttons):
+            for col, key in enumerate(key_list):
+                if key == "Shift":
+                    button = tk.Button(self.keyboard_frame, text=key, font=self.main_font,
+                                       command=lambda key=key: self.handle_keyboard_input(key),
+                                       width=3, height=1, bg="lightgray")
+                elif key == "DEL":
+                    button = tk.Button(self.keyboard_frame, text=key, font=self.main_font,
+                                       command=lambda key=key: self.handle_keyboard_input(key),
+                                       width=3, height=1, bg="lightgray")
+                elif key == "Hide":
+                    button = tk.Button(self.keyboard_frame, text=key, font=self.main_font,
+                                       command=lambda key=key: self.handle_keyboard_input(key),
+                                       width=3, height=1, bg="lightgray")
+                elif key == "Space":
+                    button = tk.Button(self.keyboard_frame, text=key, font=self.main_font,
+                                        command=lambda key=key: self.handle_keyboard_input(key),
+                                        width=6, height=1, bg="white")
+                else:
+                    button = tk.Button(self.keyboard_frame, text=key, font=self.main_font,
+                                    command=lambda key=key: self.handle_keyboard_input(key),
+                                    width=3, height=1, bg="white")
+                button.grid(row=row, column=col, padx=2, pady=2)
+
+    def show_keyboard(self):
+        """Shows the virtual keyboard"""
+        self.keyboard_frame.pack(side="bottom", fill="x")
+    
+    def hide_keyboard(self):
+        """Hides the virtual keyboard"""
+        self.keyboard_frame.pack_forget()
+
+    def handle_keyboard_input(self, key):
+        """Handles input from the virtual keyboard"""
+
+        #char map for special characters which get swapped on shift
+        special_chars = {
+            "!": "*",
+            '"': "-",
+            "#": "_",
+            "$": "+",
+            "%": "=",
+            "&": "<",
+            "/": ">",
+            "(": "@",
+            ")": "^",
+            "?": "`",
+        }
+        
+        active_entry = self.focus_get()
+        if active_entry:
+            if key == "DEL":
+                active_entry.delete(len(active_entry.get())-1, tk.END)
+            elif key == "Hide":
+                self.hide_keyboard()
+            elif key == "Shift":
+                self.switch_keyboard_on_shift()
+                self.keyboard_shift = not self.keyboard_shift
+            elif key == "Space":
+                active_entry.insert(tk.END, " ")
+            else:
+                if self.keyboard_shift:
+                    if key in special_chars:
+                        key = special_chars[key]
+                    else:
+                        key = key.upper()
+                active_entry.insert(tk.END, key)
+    
+    def switch_keyboard_on_shift(self):
+        """Switches the case of the virtual keyboard buttons"""
+        #char map for special characters
+        specialchar_map = {
+            "!": "*",
+            '"': "-",
+            "#": "_",
+            "$": "+",
+            "%": "=",
+            "&": "<",
+            "/": ">",
+            "(": "@",
+            ")": "^",
+            "?": "`",
+            "*": "!",
+            "-": '"',
+            "_": "#",
+            "+": "$",
+            "=": "%",
+            "<": "&",
+            ">": "/",
+            "@": "(",
+            "^": ")",
+            "`": "?"
+        }
+
+        
+        # Get all buttons from the keyboard frame
+        buttons = self.keyboard_frame.winfo_children()
+
+        # Iterate through each button
+        for button in buttons:
+            # Convert existing text to a list of characters
+            chars = list(button['text'])
+
+            # exclude special buttons
+            if button['text'] in ["Shift", "DEL", "Hide", "Space"]:
+                continue
+
+            # Toggle the case of each character
+            chars = [specialchar_map.get(char, char.upper() if char.islower() else char.lower()) if char.isalpha() else specialchar_map.get(char, char) for char in chars]
+                
+            # Rebuild the text and update the button label
+            button['text'] = ''.join(chars)            
+    
 
 
 class WelcomePage(tk.Frame):
@@ -52,6 +181,13 @@ class WelcomePage(tk.Frame):
         label = tk.Label(can, text="Hello! This is the setup for your feedingstation.\nYou need Wifi to complete this Setup.\nTo get started, press the buttom below!", font=controller.main_font)
         label.pack(side="top", fill="x", pady=10)
 
+        #test input field, which opens keyboard by toggle_keyboard() function of controller when focused
+        test_entry = tk.Entry(can, font=("Arial", 12))
+        test_entry.pack()
+        test_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
+        test_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
+
+
         tk.Button(can, text="Get Started!", command=lambda: controller.show_frame("WifiSetup"), pady=10, background="grey", foreground="white", font=controller.main_font).pack()
 
 
@@ -61,7 +197,7 @@ class WifiSetup(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        can = Canvas(self, height=350, width=700)
+        can = Canvas(self, height=480, width=800)
         can.place(relx=0.5, rely=0.5, anchor=CENTER)
 
         label = tk.Label(can, text="Wählen Sie ein WLAN-Netzwerk:", font=controller.main_font, height=2, width=35)
@@ -71,11 +207,13 @@ class WifiSetup(tk.Frame):
         self.ssid_var = tk.StringVar()
         self.ssid_var.set("Netzwerk wählen")
         self.ssid_menu = tk.OptionMenu(can, self.ssid_var, *self.scan_wifi())
-        self.ssid_menu.config(bg="blue", fg="white")
+        self.ssid_menu.config(bg="blue", fg="white", padx=5)
         self.ssid_menu.pack()
 
         # button to update the list of available networks
-        update_button = tk.Button(can, text="Netzwerke aktualisieren", command=self.update_networks, pady=10, background="grey", foreground="white", font=controller.main_font)
+        global refreshImage
+        refreshImage = tk.PhotoImage(file="refresh.png")
+        update_button = tk.Button(can, text="Netzwerke aktualisieren", image=refreshImage, command=self.update_networks)
         update_button.pack()
 
         # password input
@@ -83,36 +221,38 @@ class WifiSetup(tk.Frame):
         tk.Label(can, text="Passwort:", font=("Arial", 12), height=2, width=35).pack()
         password_entry = tk.Entry(can, textvariable=password_var, show="*")
         password_entry.pack()
+        password_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
+        password_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
 
         # button to connect to the selected network
         connect_button = tk.Button(can, text="Verbinden", command=lambda: self.connect_to_wifi(self.ssid_var.get(), password_var.get()), pady=10, background="grey", foreground="white", font=controller.main_font)
         connect_button.pack()
 
-        close_window_button = tk.Button(can, text="Close", command=lambda: controller.destroy(), background="grey", foreground="white", font=controller.main_font)
+        close_window_button = tk.Button(can, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
         close_window_button.pack()
 
     def scan_wifi(self):
-        networks = subprocess.check_output(["sudo", "iwlist", "wlan0", "scan"])
-        networks = networks.decode("utf-8") # converts the bytes to a string
-        networks = networks.split("\n")     # splits the string into a list
-        wifi_list = []
+        # networks = subprocess.check_output(["sudo", "iwlist", "wlan0", "scan"])
+        # networks = networks.decode("utf-8") # converts the bytes to a string
+        # networks = networks.split("\n")     # splits the string into a list
+        # wifi_list = []
 
-        for line in networks:
-            if "ESSID" in line:
-                wifi_list.append(line.split('"')[1])
+        # for line in networks:
+        #     if "ESSID" in line:
+        #         wifi_list.append(line.split('"')[1])
+        wifi_list = ["Wiufi1", "Demo2"]
 
         return wifi_list
 
     def update_networks(self):
         self.ssid_menu["menu"].delete(0, "end")
         for ssid in self.scan_wifi():
+            ssid = "New Network"
             self.ssid_menu["menu"].add_command(label=ssid, command=lambda ssid=ssid: self.ssid_var.set(ssid))
 
     def connect_to_wifi(ssid, password):
-        os.system('sudo raspi-config nonint do_wifi_ssid_passphrase ' + ssid + " " + password)
+        #os.system('sudo raspi-config nonint do_wifi_ssid_passphrase ' + ssid + " " + password)
         print(f"Verbindung zu {ssid} mit Passwort {password} wird hergestellt...")
-
-
 
 
 class PageTwo(tk.Frame):
@@ -129,5 +269,4 @@ class PageTwo(tk.Frame):
 
 if __name__ == "__main__":
     app = MainApp()
-    app.attributes("-fullscreen", True)
     app.mainloop()
