@@ -8,7 +8,6 @@ class MainApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry("800x480")
         self.after(1000, self.attributes, '-fullscreen', True)
         
         self.main_font = tkfont.Font(family='Helvetica', size=14, weight="normal")
@@ -46,10 +45,10 @@ class MainApp(tk.Tk):
         """Creates the virtual keyboard layout"""
         keyboard_buttons = [
             ["!", '"', "#", "$", "%", "&", "/", "(", ")", "?"],
-            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Hide"],
-            ["q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "DEL"],
-            ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
-            ["Shift", "y", "x", "c", "Space", "v", "b", "n", "m"]
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+            ["q", "w", "e", "r", "t", "z", "u", "i", "o", "p"],
+            ["a", "s", "d", "f", "g", "h", "j", "k", "l", "Hide"],
+            ["Shift", "y", "x", "c", "Space", "v", "b", "n", "m", "DEL"]
             
         ]
 
