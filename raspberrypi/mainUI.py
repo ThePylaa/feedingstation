@@ -3,13 +3,14 @@ from tkinter import ttk
 from tkinter import font as tkfont
 from tkinter import *
 import subprocess
+import requests
 import os
 
 class MainApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.after(2000, self.attributes, '-fullscreen', True)
+        self.after(4000, self.attributes, '-fullscreen', True)
         
         self.main_font = tkfont.Font(family='Helvetica', size=14, weight="normal")
 
@@ -181,13 +182,6 @@ class WelcomePage(tk.Frame):
         label = tk.Label(can, text="Hello! This is the setup for your feedingstation.\nYou need Wifi to complete this Setup.\nTo get started, press the buttom below!", font=controller.main_font)
         label.pack(side="top", fill="x", pady=10)
 
-        #test input field, which opens keyboard by toggle_keyboard() function of controller when focused
-        test_entry = tk.Entry(can, font=("Arial", 12))
-        test_entry.pack()
-        test_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
-        test_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
-
-
         tk.Button(can, text="Get Started!", command=lambda: controller.show_frame("WifiSetup"), pady=10, background="grey", foreground="white", font=controller.main_font).pack()
 
 
@@ -205,18 +199,19 @@ class WifiSetup(tk.Frame):
         label = tk.Label(can, text="Wählen Sie ein WLAN-Netzwerk:", font=controller.main_font, height=2, width=35)
         label.pack(side="top", fill="x", pady=10)
 
-        # available networks
-        # Listbox für die Netzwerkliste
-        network_list = Listbox(can, font=("Arial", 12))
-        network_list.pack(padx=10, pady=10)
+        # available networks list
+        self.network_list = Listbox(can, font=("Arial", 12))
+        self.network_list.pack(padx=10, pady=10)
+        for networks in available_networks:
+            self.network_list.insert(END, networks)
 
-        # Einfügen der Netzwerke in die Listbox
-        for network in available_networks:
-            network_list.insert(END, network)
-
-        # Funktion zum Abrufen des ausgewählten Netzwerks
+        # Function to get the selected network
         def get_selected_network():
-            return network_list.get(network_list.curselection()[0])
+            index = self.network_list.index(ACTIVE)
+            if index != -1:  # Check if a selection exists
+                return self.network_list.get(index)
+            else:
+                print("No network selected.")
 
         # button to update the list of available networks
         global refreshImage
@@ -252,16 +247,31 @@ class WifiSetup(tk.Frame):
         return wifi_list
 
     def update_networks(self):
-        self.ssid_menu["menu"].delete(0, "end")
+        self.network_list.delete(0, END)        
         for ssid in self.scan_wifi():
-            self.ssid_menu["menu"].add_command(label=ssid, command=lambda ssid=ssid: self.ssid_var.set(ssid))
+            self.network_list.insert(END, ssid)
 
     def connect_to_wifi(self, ssid, password):
         if not ssid:
             print("Please select a network")
             return
-        os.system('sudo raspi-config nonint do_wifi_ssid_passphrase ' + ssid + " " + password)
-        print(f"Verbindung zu {ssid} mit Passwort {password} wird hergestellt...")
+        #try 3 times to connect to the network
+        for i in range(3):
+            os.system('sudo raspi-config nonint do_wifi_ssid_passphrase "' + ssid + '" ' + password )
+            print(f"Verbindung zu {ssid} mit Passwort {password} wird hergestellt...")
+            if self.hasInternet():
+                print("Connected to the network")
+                self.controller.show_frame("PageTwo")
+            else:
+                print("Failed to connect to the network")
+    
+    def hasInternet(self):
+        # Check if the device has internet
+        try:
+            requests.get("https://www.google.com")
+            return True
+        except:
+            return False
 
 
 class PageTwo(tk.Frame):
@@ -274,6 +284,9 @@ class PageTwo(tk.Frame):
         button = tk.Button(self, text="Go to the start page",
                            command=lambda: controller.show_frame("StartPage"))
         button.pack()
+
+        close_window_button = tk.Button(self, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
+        close_window_button.pack()
         
 
 if __name__ == "__main__":
