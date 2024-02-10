@@ -199,9 +199,23 @@ class WifiSetup(tk.Frame):
         label = tk.Label(can, text="Wählen Sie ein WLAN-Netzwerk:", font=controller.main_font, height=2, width=35)
         label.pack(side="top", fill="x", pady=10)
 
-        # available networks list
-        self.network_list = Listbox(can, font=("Arial", 12))
+        # create canvas with scrollbar and listbox for the available networks
+        listCanavas = Canvas(can)
+        listCanavas.pack()
+
+        # create scrollbar
+        scrollbar = Scrollbar(listCanavas, orient="vertical")
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        # create listbox for the available networks
+        self.network_list = Listbox(listCanavas, font=("Arial", 12))
         self.network_list.pack(padx=10, pady=10)
+
+        # attach listbox to scrollbar
+        self.network_list.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.network_list.yview)
+
+        # insert available networks into the listbox
         for networks in available_networks:
             self.network_list.insert(END, networks)
 
