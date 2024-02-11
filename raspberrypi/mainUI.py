@@ -22,7 +22,7 @@ class MainApp(tk.Tk):
 
         # Dictionary of frames
         self.frames = {}
-        for F in (WelcomePage, WifiSetup, PageTwo):
+        for F in (WelcomePage, WifiSetup, WifiSetupErrorPage, PageTwo):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -196,7 +196,7 @@ class WifiSetup(tk.Frame):
         can = Canvas(self, height=480, width=800)
         can.place(relx=0.5, rely=0.5, anchor=CENTER)
 
-        label = tk.Label(can, text="Wählen Sie ein WLAN-Netzwerk:", font=controller.main_font, height=2, width=35)
+        label = tk.Label(can, text="Chose your Wifi Network:", font=controller.main_font, height=2, width=35)
         label.pack(side="top", fill="x", pady=10)
 
         # create canvas with scrollbar and listbox for the available networks
@@ -208,7 +208,7 @@ class WifiSetup(tk.Frame):
         scrollbar.pack(side=RIGHT, fill=Y)
 
         # create listbox for the available networks
-        self.network_list = Listbox(listCanavas, font=("Arial", 12))
+        self.network_list = Listbox(listCanavas, font=("Arial", 12), height=5)
         self.network_list.pack(padx=10, pady=10)
 
         # attach listbox to scrollbar
@@ -230,23 +230,24 @@ class WifiSetup(tk.Frame):
         # button to update the list of available networks
         global refreshImage
         refreshImage = tk.PhotoImage(file="refresh.png")
-        update_button = tk.Button(can, text="Netzwerke aktualisieren", image=refreshImage, command=self.update_networks)
+        update_button = tk.Button(can, text="Refresh Networks", image=refreshImage, command=self.update_networks)
         update_button.pack()
 
         # password input
         self.password_var = tk.StringVar()
-        tk.Label(can, text="Passwort:", font=("Arial", 12), height=2, width=35).pack()
+        tk.Label(can, text="Password:", font=("Arial", 12), height=2, width=35).pack()
         password_entry = tk.Entry(can, textvariable=self.password_var, show="*")
         password_entry.pack()
         password_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
         password_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
 
         # button to connect to the selected network
-        connect_button = tk.Button(can, text="Verbinden", command=lambda: self.connect_to_wifi(get_selected_network(), self.password_var.get()), pady=10, background="grey", foreground="white", font=controller.main_font)
+        connect_button = tk.Button(can, text="Connect", command=lambda: self.connect_to_wifi(get_selected_network(), self.password_var.get()), pady=10, background="grey", foreground="white", font=controller.main_font)
         connect_button.pack()
 
-        close_window_button = tk.Button(can, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
-        close_window_button.pack()
+        #debug button to show the next page, placed at the right top corner
+        debug_button = tk.Button(self, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
+        debug_button.pack(side="right", anchor=NE)
 
     def scan_wifi(self):
         networks = subprocess.check_output(["sudo", "iwlist", "wlan0", "scan"])
@@ -261,9 +262,17 @@ class WifiSetup(tk.Frame):
         return wifi_list
 
     def update_networks(self):
-        self.network_list.delete(0, END)        
-        for ssid in self.scan_wifi():
-            self.network_list.insert(END, ssid)
+        self.network_list.delete(0, END)     
+        self.network_list.insert(END, "Scanning for networks...")
+        self.update()
+
+        new_networks = self.scan_wifi()
+        self.network_list.delete(0, END)
+        if not new_networks:
+            self.network_list.insert(END, "No networks found")
+        else:    
+            for ssid in new_networks:
+                self.network_list.insert(END, ssid)
 
     def connect_to_wifi(self, ssid, password):
         if not ssid:
@@ -274,10 +283,15 @@ class WifiSetup(tk.Frame):
             os.system('sudo raspi-config nonint do_wifi_ssid_passphrase "' + ssid + '" ' + password )
             print(f"Verbindung zu {ssid} mit Passwort {password} wird hergestellt...")
             if self.hasInternet():
-                print("Connected to the network")
-                self.controller.show_frame("PageTwo")
-            else:
-                print("Failed to connect to the network")
+                break
+        if self.hasInternet():
+            print("Connected to the network")
+            self.controller.show_frame("PageTwo")
+            return
+        else:
+            print("Failed to connect to the network")
+            self.controller.show_frame("WifiSetupErrorPage")
+        
     
     def hasInternet(self):
         # Check if the device has internet
@@ -287,16 +301,26 @@ class WifiSetup(tk.Frame):
         except:
             return False
 
+class WifiSetupErrorPage(tk.Frame):
+    
+        def __init__(self, parent, controller):
+            tk.Frame.__init__(self, parent)
+            self.controller = controller
+            label = tk.Label(self, text="Failed to connect to the network", font=controller.main_font, height=2, width=10)
+            label.pack(side="top", fill="x", pady=10)
+            button = tk.Button(self, text="Try again",
+                            command=lambda: controller.show_frame("WifiSetup"))
+            button.pack()
 
 class PageTwo(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="YALLAH", font=controller.main_font, height=2, width=10)
+        label = tk.Label(self, text="Network connection established", font=controller.main_font, height=2, width=10)
         label.pack(side="top", fill="x", pady=10)
         button = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame("StartPage"))
+                           command=lambda: controller.show_frame("WelcomePage"))
         button.pack()
 
         close_window_button = tk.Button(self, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
