@@ -50,11 +50,15 @@ def doRoutine(lastServerUpdate):
 
     #the server will be updated every 5 minutes but the schedule will be checked every 10 seconds
     if getTimeInSeconds() - lastServerUpdate > 300:
-        lastServerUpdate = getTimeInSeconds()
+        
         if hasInternet():
             print("Updating server and getting schedule")
             updateServer()
             getSchedule()
+            #Also updating the RTC
+            setRtcTime()
+        
+        lastServerUpdate = getTimeInSeconds()
 
     # Check if rfid is present
     rfid = getRFID()
