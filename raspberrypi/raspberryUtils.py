@@ -1,16 +1,16 @@
 from arduinoCommunication import *
 from rtc import *
 import time 
-from dotenv import load_dotenv
 import os
 import requests
 import json
 from datetime import datetime
 
 # Load the environment variables
-load_dotenv()
-api_host= os.getenv("API_HOST")
-station_uuid = os.getenv("DEVICE_UUID")    
+with open("config.json", "r") as file:
+    config = json.loads(file.read())
+api_host= config["API_HOST"]
+station_uuid = config["DEVICE_UUID"]
 
 def updateServer():
     # Update the server with the current status of the feeding stations humidity and temperature
