@@ -27,6 +27,10 @@ Stepper Motor(SPU, 37,35,33,31);
 #define LBP 40
 //----------------
 
+//for RFID
+#define RFIDRESET 28
+//----------------
+
 //global variables
 String inputBuffer;
 JsonDocument payload;
@@ -53,6 +57,9 @@ void setup() {
   //Lightbarrier
   pinMode(LBP, INPUT);
 
+  //RFID scanner setup
+  pinMode(RFIDRESET, OUTPUT);
+  resetRFID();
 
 }
 
@@ -132,6 +139,12 @@ bool isBarrierBroken(){
   return true;
 }
 
+void resetRFID(){
+  digitalWrite(RFIDRESET, LOW);
+  delay(10);
+  digitalWrite(RFIDRESET, HIGH);
+}
+
 void getRfid(char* getString){
   char asciiRfidCardNum[10];
   char asciiRfidCountry[4];
@@ -147,13 +160,13 @@ void getRfid(char* getString){
   }
 
   //when there was an input
-  if (index != 0) {
+  if (index > 1 && inputBuffer[0] == 0) {
     
-    for (int i = 1; i <= 10; i++) {
-      asciiRfidCardNum[i - 1] = decToASCII(inputBuffer[i]);
+    for (int i = 2; i <= 11; i++) {
+      asciiRfidCardNum[i - 2] = decToASCII(inputBuffer[i]);
     }
-    for (int i = 11; i <= 14; i++) {
-      asciiRfidCountry[i - 11] = decToASCII(inputBuffer[i]);
+    for (int i = 12; i <= 15; i++) {
+      asciiRfidCountry[i - 12] = decToASCII(inputBuffer[i]);
     }
 
     //reverse arrays
@@ -169,6 +182,7 @@ void getRfid(char* getString){
 
     }
   }
+  resetRFID();
 }
 
 char decToASCII(int dezimal) {
