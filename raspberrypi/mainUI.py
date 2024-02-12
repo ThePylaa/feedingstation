@@ -3,8 +3,8 @@ from tkinter import ttk
 from tkinter import font as tkfont
 from tkinter import *
 import subprocess
-import requests
 import os
+from raspberryUtils import doRoutine, hasInternet
 
 class MainApp(tk.Tk):
 
@@ -282,9 +282,9 @@ class WifiSetup(tk.Frame):
         for i in range(3):
             os.system('sudo raspi-config nonint do_wifi_ssid_passphrase "' + ssid + '" ' + password )
             print(f"Verbindung zu {ssid} mit Passwort {password} wird hergestellt...")
-            if self.hasInternet():
+            if hasInternet():
                 break
-        if self.hasInternet():
+        if hasInternet():
             print("Connected to the network")
             self.controller.show_frame("PageTwo")
             return
@@ -293,13 +293,7 @@ class WifiSetup(tk.Frame):
             self.controller.show_frame("WifiSetupErrorPage")
         
     
-    def hasInternet(self):
-        # Check if the device has internet
-        try:
-            requests.get("https://www.google.com")
-            return True
-        except:
-            return False
+
 
 class WifiSetupErrorPage(tk.Frame):
     
