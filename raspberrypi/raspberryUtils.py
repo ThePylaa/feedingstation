@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 # Load the environment variables
-with open("config.json", "r") as file:
+with open("/home/pi/Desktop/feedingstation/raspberrypi/config.json", "r") as file:
     config = json.loads(file.read())
 api_host= config["API_HOST"]
 station_uuid = config["DEVICE_UUID"]
@@ -31,7 +31,7 @@ def getSchedule():
         res = requests.get(f"{api_host}/portion/portions?feedingstation={station_uuid}")
         schedule = res.json()
         print(schedule)
-        with open("schedule.json", "w") as file:
+        with open("/home/pi/Desktop/feedingstation/raspberrypi/schedule.json", "w") as file:
             file.write(json.dumps(schedule))
     except Exception as e:
         print(e)
@@ -65,7 +65,7 @@ def doRoutine(lastServerUpdate):
 
     # If rfid is present, check if the rfid is in the schedule
     if rfid:
-        with open("schedule.json", "r") as file:
+        with open("/home/pi/Desktop/feedingstation/raspberrypi/schedule.json", "r") as file:
             schedule = json.loads(file.read())
             for animal in schedule:
                 if animal["animal_rfid"] == rfid:
@@ -77,7 +77,7 @@ def doRoutine(lastServerUpdate):
                             dispensePortion(portion["size"])
                             time.sleep(0.27 * portion["size"])
                             animal["portions"].remove(portion)
-                            with open("schedule.json", "w") as file:
+                            with open("/home/pi/Desktop/feedingstation/raspberrypi/schedule.json", "w") as file:
                                 file.write(json.dumps(schedule))
                                 break    
         
