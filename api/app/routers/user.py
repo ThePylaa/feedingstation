@@ -75,7 +75,7 @@ def register(user: createUser, db: Session = Depends(get_db)):
     return dbUser
     
 @router.post("/login")
-def login(form_data: loginUser = Depends(), db: Session = Depends(get_db)):
+def login(form_data: loginUser, db: Session = Depends(get_db)):
     """Function to get a standard token"""
     email = form_data.email
     password = form_data.password
