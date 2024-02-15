@@ -4,6 +4,11 @@ from tkinter import *
 from ui.welcomePage import WelcomePage
 from ui.wifiSetup import WifiSetup
 from ui.wifiSetupErrorPage import WifiSetupErrorPage
+from ui.wifiSetupSuccess import WifiSetupSuccess
+from ui.registerStation import RegisterStation
+from ui.registerStationErrorPage import RegisterStationErrorPage
+from ui.registerStationSuccess import RegisterStationSuccess
+
 
 
 class MainApp(tk.Tk):
@@ -22,7 +27,9 @@ class MainApp(tk.Tk):
 
         # Dictionary of frames
         self.frames = {}
-        for F in (WelcomePage, WifiSetup, WifiSetupErrorPage, PageTwo):
+
+        # for F in (WelcomePage, WifiSetup, WifiSetupErrorPage, WifiSetupSuccess, RegisterStation, RegisterStationErrorPage):
+        for F in (WelcomePage, WifiSetup, WifiSetupErrorPage, WifiSetupSuccess, RegisterStation, RegisterStationErrorPage, RegisterStationSuccess):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -168,20 +175,6 @@ class MainApp(tk.Tk):
             # Rebuild the text and update the button label
             button['text'] = ''.join(chars)            
     
-class PageTwo(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        label = tk.Label(self, text="Network connection established", font=controller.main_font, height=2, width=10)
-        label.pack(side="top", fill="x", pady=10)
-        button = tk.Button(self, text="Go to the start page",
-                           command=lambda: controller.show_frame("WelcomePage"))
-        button.pack()
-
-        close_window_button = tk.Button(self, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
-        close_window_button.pack()
-        
 
 if __name__ == "__main__":
     app = MainApp()

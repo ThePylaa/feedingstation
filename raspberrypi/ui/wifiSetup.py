@@ -106,7 +106,7 @@ class WifiSetup(tk.Frame):
                 break
         if hasInternet():
             print("Connected to the network")
-            self.controller.show_frame("PageTwo")
+            self.controller.show_frame("WifiSetupSuccess")
             return
         else:
             print("Failed to connect to the network")
