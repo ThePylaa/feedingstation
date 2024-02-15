@@ -35,7 +35,7 @@ def register(feedingstation: createFeedingstation, db: Session = Depends(get_db)
     if existing_station:
         raise HTTPException(status_code=406, detail="Feedingstation / UUID already registered")
     
-    dbStation = FeedingStation_Model(feedingstation_id=feedingstation.feedingstation_id, name=feedingstation.name)
+    dbStation = FeedingStation_Model(feedingstation_id=feedingstation.feedingstation_id, user_id=feedingstation.user_id, name=feedingstation.name)
     db.add(dbStation)
     db.commit()
     db.refresh(dbStation)
