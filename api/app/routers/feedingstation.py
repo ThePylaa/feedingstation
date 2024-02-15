@@ -8,6 +8,14 @@ from uuid import uuid4
 
 router = APIRouter(tags=["feedingstation"],prefix="/feedingstation")
 
+@router.get("/info")
+def get_station_info(feedingstation_id: str, db: Session = Depends(get_db)):
+    """Function that returns the information of a feedingstation"""
+    station = db.query(FeedingStation_Model).filter(FeedingStation_Model.feedingstation_id == feedingstation_id).first()
+    if not station:
+        raise HTTPException(status_code=404, detail="Feedingstation not found")
+    return station
+
 @router.get("/all")
 def get_all_stations(db: Session = Depends(get_db)):
     """Function that returns all feeediong stations"""
