@@ -91,7 +91,7 @@ def login(form_data: loginUser = Depends(), db: Session = Depends(get_db)):
             db.add(dbtoken)
             db.commit()
             db.refresh(dbtoken)
-            content = {"access_token": token, "token_type": "bearer"}
+            content = {"access_token": token, "token_type": "bearer", "user_id": str(db_user.user_id)}
             response = JSONResponse(content=content)
             response.set_cookie(key="access_token", value=token, max_age=1800)
             return response 
