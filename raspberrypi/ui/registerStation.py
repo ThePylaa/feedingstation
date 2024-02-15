@@ -39,7 +39,7 @@ class RegisterStation(tk.Frame):
         api_host= config["API_HOST"]
 
         try:
-            loginRes = requests.post(f"{api_host}/user/login?email={email}&password={password}")
+            loginRes = requests.post(f"{api_host}/user/login", json={"email": email, "password": password})
             loginRes = loginRes.json()
             user_id = loginRes["user_id"]
 
