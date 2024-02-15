@@ -49,8 +49,8 @@ class RegisterStation(tk.Frame):
             registerRes = requests.post(f"{api_host}/feedingstation/register", json={"feedingstation_id": station_id, "user_id": user_id, "name": station_name})
 
             if registerRes.status_code == 200:
-                config["STATION_ID"] = station_id
-                config["STATION_NAME"] = station_name
+                config["DEVICE_UUID"] = station_id
+                config["DEVICE_NAME"] = station_name
                 with open("./raspberrypi/config.json", "w") as file:
                     file.write(json.dumps(config))
 
