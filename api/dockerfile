@@ -1,4 +1,4 @@
-FROM python:3.11.5-alpine3.18
+FROM amd64/python:3.11.8-alpine
 
 WORKDIR /opt/api/
 
