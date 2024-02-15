@@ -4,8 +4,26 @@ import json
 
 class RegisterStation(tk.Frame):
     def __init__(self, parent, controller):
+        with open("./raspberrypi/config.json", "r") as file:
+            self.config = json.loads(file.read())
+        self.api_host= self.config["API_HOST"]
+            
         tk.Frame.__init__(self, parent)
         self.controller = controller
+
+        isExistingRes = requests.get(f"{self.api_host}/feedingstation/info?feedingstation_id={self.config['DEVICE_UUID']}")
+        print(isExistingRes.status_code)
+        if isExistingRes.status_code == 200:
+            self.label = tk.Label(self, text="Station already registered", font=controller.main_font)
+            self.label.pack(side="top", fill="x", pady=10)
+            self.label = tk.Label(self, text="Station Name: " + self.config["DEVICE_NAME"], font=controller.main_font)
+            self.label.pack(side="top", fill="x", pady=10)
+            self.label = tk.Label(self, text="Station ID: " + self.config["DEVICE_UUID"], font=controller.main_font)
+            self.label.pack(side="top", fill="x", pady=10)
+
+            self.continue_button = tk.Button(self, text="Continue", font=controller.main_font, command=lambda: controller.show_frame("WelcomePage"))
+            self.continue_button.pack()
+            return
 
         self.label = tk.Label(self, text="Register Station", font=controller.main_font)
         self.label.pack(side="top", fill="x", pady=10)
@@ -33,10 +51,8 @@ class RegisterStation(tk.Frame):
         station_name = self.station_name_entry.get()
         email = self.email_entry.get()
         password = self.password_entry.get()
-
-        with open("./raspberrypi/config.json", "r") as file:
-            config = json.loads(file.read())
-        api_host= config["API_HOST"]
+        api_host = self.api_host
+        config = self.config
 
         try:
             loginRes = requests.post(f"{api_host}/user/login", json={"email": email, "password": password})
