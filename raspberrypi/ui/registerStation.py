@@ -56,8 +56,14 @@ class RegisterStation(tk.Frame):
 
         try:
             loginRes = requests.post(f"{api_host}/user/login", json={"email": email, "password": password})
+            
+            if loginRes.status_code != 200:
+                self.controller.show_frame("RegisterStationErrorPage")
+                return
+            
             loginRes = loginRes.json()
             user_id = loginRes["user_id"]
+            config["USER_ID"] = user_id
 
             station_id = requests.get(f"{api_host}/feedingstation/new_station_uuid")
             station_id = station_id.json()
