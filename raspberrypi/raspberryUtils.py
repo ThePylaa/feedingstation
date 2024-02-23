@@ -1,16 +1,18 @@
 from arduinoCommunication import *
 from rtc import *
 import time 
-import os
+import io
 import requests
 import json
 from datetime import datetime
+from picamera2 import Picamera2
 
 # Load the environment variables
 with open("/home/pi/Desktop/feedingstation/raspberrypi/config.json", "r") as file:
     config = json.loads(file.read())
 api_host= config["API_HOST"]
 station_uuid = config["DEVICE_UUID"]
+user_id = config["USER_ID"]
 
 def updateServer():
     # Update the server with the current status of the feeding stations humidity and temperature
@@ -24,6 +26,21 @@ def updateServer():
     except Exception as e:
         print(e)
         print("Failed to update server")
+
+def sendImage():
+    picam2 = Picamera2()
+    picam2.configure(picam2.create_capture_configuration())
+    picam2.start()
+    time.sleep(1)
+    data = io.BytesIO()
+    picam2.capture_file(data, format='jpeg')
+
+    try:
+        res = requests.post(f"{api_host}/picture/upload_picture", json={"user_id":  user_id, "feedingstation_id": station_uuid, "picture": data.getvalue(), "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    except Exception as e:
+        print(e)
+        print("Failed to upload picture to server")
+
 
 def getSchedule():
     # Get the schedule from the server and saves it to the schedule.json file
