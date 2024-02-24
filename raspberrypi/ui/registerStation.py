@@ -4,26 +4,29 @@ import json
 
 class RegisterStation(tk.Frame):
     def __init__(self, parent, controller):
-        with open("./raspberrypi/config.json", "r") as file:
+        with open("/home/pi/Desktop/feedingstation/raspberrypi/config.json", "r") as file:
             self.config = json.loads(file.read())
         self.api_host= self.config["API_HOST"]
             
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        isExistingRes = requests.get(f"{self.api_host}/feedingstation/info?feedingstation_id={self.config['DEVICE_UUID']}")
-        print(isExistingRes.status_code)
-        if isExistingRes.status_code == 200:
-            self.label = tk.Label(self, text="Station already registered", font=controller.main_font)
-            self.label.pack(side="top", fill="x", pady=10)
-            self.label = tk.Label(self, text="Station Name: " + self.config["DEVICE_NAME"], font=controller.main_font)
-            self.label.pack(side="top", fill="x", pady=10)
-            self.label = tk.Label(self, text="Station ID: " + self.config["DEVICE_UUID"], font=controller.main_font)
-            self.label.pack(side="top", fill="x", pady=10)
+        try:
+            isExistingRes = requests.get(f"{self.api_host}/feedingstation/info?feedingstation_id={self.config['DEVICE_UUID']}")
+            if isExistingRes.status_code == 200:
+                self.label = tk.Label(self, text="Station already registered", font=controller.main_font)
+                self.label.pack(side="top", fill="x", pady=10)
+                self.label = tk.Label(self, text="Station Name: " + self.config["DEVICE_NAME"], font=controller.main_font)
+                self.label.pack(side="top", fill="x", pady=10)
+                self.label = tk.Label(self, text="Station ID: " + self.config["DEVICE_UUID"], font=controller.main_font)
+                self.label.pack(side="top", fill="x", pady=10)
 
-            self.continue_button = tk.Button(self, text="Continue", font=controller.main_font, command=lambda: controller.show_frame("WelcomePage"))
-            self.continue_button.pack()
-            return
+                self.continue_button = tk.Button(self, text="Continue", font=controller.main_font, command=lambda: controller.show_frame("WelcomePage"))
+                self.continue_button.pack()
+                return
+        except:
+            pass
+        
 
         self.label = tk.Label(self, text="Register Station", font=controller.main_font)
         self.label.pack(side="top", fill="x", pady=10)
@@ -32,21 +35,32 @@ class RegisterStation(tk.Frame):
         self.station_name_label.pack()
         self.station_name_entry = tk.Entry(self, font=controller.main_font)
         self.station_name_entry.pack()
+        self.station_name_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
+        self.station_name_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
 
         self.email_label = tk.Label(self, text="Email", font=controller.main_font)
         self.email_label.pack()
         self.email_entry = tk.Entry(self, font=controller.main_font)
         self.email_entry.pack()
+        self.email_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
+        self.email_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
 
         self.password_label = tk.Label(self, text="Password", font=controller.main_font)
         self.password_label.pack()
         self.password_entry = tk.Entry(self, font=controller.main_font, show="*")
         self.password_entry.pack()
+        self.password_entry.bind("<FocusIn>", lambda event: controller.show_keyboard())
+        self.password_entry.bind("<FocusOut>", lambda event: controller.hide_keyboard())
 
         self.register_button = tk.Button(self, text="Register", font=controller.main_font, command=lambda: self.register_station())
         self.register_button.pack()
 
+        #debug button to show the next page, placed at the right top corner
+        debug_button = tk.Button(self, text="Close", command=lambda: controller.destroy(), pady=10, background="grey", foreground="white", font=controller.main_font)
+        debug_button.place(relx=1.0, rely=0.0, anchor="ne")
+
     def register_station(self):
+        self.controller.hide_keyboard()
         print("Registering station")
         station_name = self.station_name_entry.get()
         email = self.email_entry.get()
@@ -73,7 +87,7 @@ class RegisterStation(tk.Frame):
             if registerRes.status_code == 200:
                 config["DEVICE_UUID"] = station_id
                 config["DEVICE_NAME"] = station_name
-                with open("./raspberrypi/config.json", "w") as file:
+                with open("/home/pi/Desktop/feedingstation/raspberrypi/config.json", "w") as file:
                     file.write(json.dumps(config))
 
                 self.controller.show_frame("RegisterStationSuccess")
