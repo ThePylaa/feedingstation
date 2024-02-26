@@ -102,14 +102,14 @@ def doRoutine(lastServerUpdate):
                         break
                     # If the rfid is in the schedule, dispense a portion of food if the time of the last portion["time"] is smaller than the current time
                     for portion in animal["portions"]:
-                        if getRtcDateTime().time() > datetime.strptime(portion["time"], "%H:%M:%S").time() and portion["time"] not in dispensedPortions:
+                        if getRtcDateTime().time() > datetime.strptime(portion["time"], "%H:%M:%S").time() and [portion["time"], animal["animal_rfid"]] not in dispensedPortions:
                             print(f"Dispensing %s portions of food" % portion["size"])                               
                             dispensePortion(portion["size"])
                             #TODO, sleep has to be adjusted to the time it takes to dispense the food
                             time.sleep(1)
                             sendImage()
                             # tags portion as dispensed
-                            dispensedPortions.append(portion["time"])
+                            dispensedPortions.append([[portion["time"]], [animal["animal_rfid"]]])
 
                             with open("/home/pi/Desktop/feedingstation/raspberrypi/schedule.json", "w") as file:
                                 file.write(json.dumps(schedule))
