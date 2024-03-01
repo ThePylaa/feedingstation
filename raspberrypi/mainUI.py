@@ -57,7 +57,7 @@ class MainApp(tk.Tk):
             ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
             ["q", "w", "e", "r", "t", "z", "u", "i", "o", "p"],
             ["a", "s", "d", "f", "g", "h", "j", "k", "l", "Hide"],
-            ["Shift", "y", "x", "c", "Space", "v", "b", "n", "m", "DEL"]
+            ["Shift", "y", "x", "c", "⌴", "v", "b", "n", "m", "DEL"]
             
         ]
 
@@ -76,7 +76,7 @@ class MainApp(tk.Tk):
                     button = tk.Button(self.keyboard_frame, text=key, font=self.main_font,
                                        command=lambda key=key: self.handle_keyboard_input(key),
                                        width=3, height=1, bg="lightgray")
-                elif key == "Space":
+                elif key == "⌴":
                     button = tk.Button(self.keyboard_frame, text=key, font=self.main_font,
                                         command=lambda key=key: self.handle_keyboard_input(key),
                                         width=6, height=1, bg="white")
@@ -120,7 +120,7 @@ class MainApp(tk.Tk):
             elif key == "Shift":
                 self.switch_keyboard_on_shift()
                 self.keyboard_shift = not self.keyboard_shift
-            elif key == "Space":
+            elif key == "⌴":
                 active_entry.insert(tk.END, " ")
             else:
                 if self.keyboard_shift:
