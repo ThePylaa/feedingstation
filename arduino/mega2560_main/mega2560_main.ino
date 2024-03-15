@@ -1,8 +1,8 @@
-#include <Stepper.h> 
 #include "HX711.h"
 #include "DHT.h"
 #include <Rfid134.h>
 #include <ArduinoJson.h>
+#include <SharpDistSensor.h>
 
 
 //for HX711
@@ -19,12 +19,13 @@ DHT dht(DHTPIN, DHTTYPE);
 //----------
 
 //for stepper motor
-int SPU = 512; // Steps per turn
-Stepper Motor(SPU, 37,35,33,31);
+//TBD
 //----------------
 
 //for lightbarrier
-#define LBP 40
+#define LIGHTBARRIERPIN A0
+#define MEDIANFILTERWINDOWSIZE 5
+SharpDistSensor sensor(LIGHTBARRIERPIN, MEDIANFILTERWINDOWSIZE);
 //----------------
 
 //for RFID
@@ -54,8 +55,8 @@ void setup() {
   //Humidity / Celcius sensor
   dht.begin();
 
-  //Lightbarrier
-  pinMode(LBP, INPUT);
+  // Set sensor model for light barrier
+  sensor.setModel(SharpDistSensor::GP2Y0A41SK0F_5V_DS);
 
   //RFID scanner setup
   pinMode(RFIDRESET, OUTPUT);
@@ -101,7 +102,7 @@ void loop() {
 
   inputBuffer = "";
   
-  delay(1000); 
+  delay(990); 
 }
 
 void dispenseFood(){
@@ -113,12 +114,6 @@ void dispenseFood(){
 //gets weight of the foodbowl in gramms 
 int getFoodbowlWeight(){
   return scale.get_units();
-}
-
-//turns the stepper x degrees
-void turnDegrees(int degree){
-  Motor.step(degree * 12);
-  return;
 }
 
 //get humidity of DHT11
@@ -133,9 +128,12 @@ float getCelcius(){
 
 //checks if light barrier is broken
 bool isBarrierBroken(){
-  if (digitalRead(LBP)){
+  unsigned int distance = sensor.getDist();
+  Serial.println(distance);
+  if(distance > 200){
     return false;
   }
+
   return true;
 }
 
@@ -185,8 +183,8 @@ void getRfid(char* getString){
   resetRFID();
 }
 
-char decToASCII(int dezimal) {
-  return static_cast<char>(dezimal);
+char decToASCII(int decimal) {
+  return static_cast<char>(decimal);
 }
 
 void reverseArray(char arr[], int length) {
