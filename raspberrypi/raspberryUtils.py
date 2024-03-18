@@ -73,8 +73,9 @@ def hasInternet():
     
 def doRoutine(lastServerUpdate):
     print("Doing Main Routine")
+    global lastScheduleRefresh
 
-    #the server will be updated every 5 minutes but the schedule will be checked every 10 seconds
+    #the schedule will be updated every 5 minutes, also the server will get new information about the feeding station
     if getTimeInSeconds() - lastServerUpdate > 300:
         
         if hasInternet():
@@ -86,10 +87,12 @@ def doRoutine(lastServerUpdate):
         
         lastServerUpdate = getTimeInSeconds()
 
-    # every 24 hours all portions will be set to not dispensed, timewindow of 5 minutes
-    if (datetime.datetime.now() - lastScheduleRefresh).days >= 1:
+    # if its a new day, the dispensedPortions will be reset
+    if getRtcDateTime().day != lastScheduleRefresh:
+        print("New day, resetting dispensed portions")
         dispensedPortions = []
-        lastScheduleRefresh = datetime.datetime.now()
+        lastScheduleRefresh = getRtcDateTime().day
+        
 
     # Check if rfid is present
     rfid = getRFID()
@@ -125,7 +128,11 @@ def doRoutine(lastServerUpdate):
 
 if __name__ == "__main__":
     # Main loop
+    if hasInternet():
+        setRtcTime()
+        
     lastServerUpdate = getTimeInSeconds() - 300
+    lastScheduleRefresh = 0
 
     while True:
         lastServerUpdate = doRoutine(lastServerUpdate)
