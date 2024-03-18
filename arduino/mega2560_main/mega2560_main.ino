@@ -129,7 +129,6 @@ float getCelcius(){
 //checks if light barrier is broken
 bool isBarrierBroken(){
   unsigned int distance = sensor.getDist();
-  Serial.println(distance);
   if(distance > 200){
     return false;
   }
