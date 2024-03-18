@@ -19,7 +19,8 @@ DHT dht(DHTPIN, DHTTYPE);
 //----------
 
 //for stepper motor
-#define MOTORPIN 22
+#define MOTORIN1 22
+#define MOTORIN2 23
 //----------------
 
 //for lightbarrier
@@ -40,7 +41,8 @@ String rfidString;
 
 void setup() {
   //Motor Pin
-  pinMode(MOTORPIN, OUTPUT);
+  pinMode(MOTORIN1, OUTPUT);
+  pinMode(MOTORIN2, OUTPUT);
 
   //USB communivcation with raspi
   Serial.begin(9600);
@@ -86,11 +88,16 @@ void loop() {
 
   char rfidRaw[14] = "----NORFID----";
   getRfid(rfidRaw);
-  rfidString ="";
+  rfidString = "----NORFID----";
   for (int i = 0; i < 14; i++) {
-    rfidString += rfidRaw[i];
+    if((rfidRaw[i] != NULL) && (rfidRaw[i] != '\0')){
+      rfidString[i] = rfidRaw[i];
+    }else{
+      rfidString = "----NORFID----"; 
+      break;
+    }
   }
-
+  
   payload["rfid"]     = rfidString;
   payload["weight"]   = getFoodbowlWeight();
   payload["humidity"] = getHumidity();
@@ -107,11 +114,12 @@ void loop() {
 }
 
 void dispenseFood(){
-  for (int i=127; i<132; i++) {
-    analogWrite(MOTORPIN, i);
-    delay(5);
+  digitalWrite(MOTORIN2, LOW);
+  for (int i=128; i<130; i++) {
+    analogWrite(MOTORIN1, i);
+    delay(4);
   }
-  analogWrite(MOTORPIN, 0);
+  digitalWrite(MOTORIN1, LOW);
 }
 
 //gets weight of the foodbowl in gramms 
