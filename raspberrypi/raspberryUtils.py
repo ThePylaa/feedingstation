@@ -6,6 +6,7 @@ import requests
 import json
 from datetime import datetime
 from picamera2 import Picamera2
+import base64
 
 # Load the environment variables
 with open("/home/pi/Desktop/feedingstation/raspberrypi/config.json", "r") as file:
@@ -31,14 +32,19 @@ def updateServer():
 
 def sendImage():
     picam2 = Picamera2()
-    picam2.configure(picam2.create_capture_configuration())
+    picam2.configure(picam2.create_still_configuration())
     picam2.start()
     time.sleep(1)
     data = io.BytesIO()
     picam2.capture_file(data, format='jpeg')
 
+    #convert data to base64
+    data = base64.b64encode(data.getvalue())
+
     try:
-        res = requests.post(f"{api_host}/picture/upload_picture", json={"user_id":  user_id, "feedingstation_id": station_uuid, "picture": data.getvalue(), "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+        res = requests.post(f"{api_host}/picture/upload_picture", json={"user_id":  user_id, "feedingstation_id": station_uuid, "picture": data, "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+        if res.status_code == 200:
+            print("Picture uploaded to server")
     except Exception as e:
         print(e)
         print("Failed to upload picture to server")
@@ -79,7 +85,7 @@ def doRoutine(lastServerUpdate):
             setRtcTime()
         
         lastServerUpdate = getTimeInSeconds()
-    
+
     # every 24 hours all portions will be set to not dispensed, timewindow of 5 minutes
     if (datetime.datetime.now() - lastScheduleRefresh).days >= 1:
         dispensedPortions = []
