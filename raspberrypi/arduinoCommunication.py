@@ -12,7 +12,8 @@ time.sleep(1)
 def dispensePortion(amount):
     # Dispense amount portions of food
     clearBuffer()
-    ser.write(f"dispense{amount}".encode("utf-8"))
+    ser.write(f"dispense{amount}\n".encode("utf-8"))
+    clearBuffer()
 
 def getFoodbowlWeight():
     payload = recievePayload()
