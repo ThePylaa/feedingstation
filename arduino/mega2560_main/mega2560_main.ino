@@ -35,6 +35,7 @@ SharpDistSensor sensor(LIGHTBARRIERPIN, MEDIANFILTERWINDOWSIZE);
 //global variables
 String inputBuffer;
 JsonDocument payload;
+String rfidString;
 //-----------------
 
 void setup() {
@@ -69,23 +70,23 @@ void loop() {
   while(Serial.available() > 0){
     char inChar = (char)Serial.read();
     inputBuffer += inChar;
-  }
 
-  //if instructions were send, process them
-  if(inputBuffer != "" && inputBuffer.startsWith("dispense")){
-    
-    String numStr = inputBuffer.substring(8); // extracts part after "dispense"
-    int amount = numStr.toInt(); // convert extracted String to int
+    //if instructions were send, process them
+    if(inputBuffer != "" && inputBuffer.startsWith("dispense")){
+      
+      String numStr = inputBuffer.substring(8); // extracts part after "dispense"
+      int amount = numStr.toInt(); // convert extracted String to int
 
-    for (int i = 0; i< amount; i++) {
-      dispenseFood();
-      delay(260);
+      for (int i = 0; i< amount; i++) {
+        dispenseFood();
+        delay(260);
+      }
     }
   }
-  
+
   char rfidRaw[14] = "----NORFID----";
   getRfid(rfidRaw);
-  String rfidString;
+  rfidString ="";
   for (int i = 0; i < 14; i++) {
     rfidString += rfidRaw[i];
   }
