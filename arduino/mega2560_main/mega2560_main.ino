@@ -19,7 +19,7 @@ DHT dht(DHTPIN, DHTTYPE);
 //----------
 
 //for stepper motor
-//TBD
+#define MOTORPIN 22
 //----------------
 
 //for lightbarrier
@@ -38,8 +38,8 @@ JsonDocument payload;
 //-----------------
 
 void setup() {
-  //Fake Motor LED
-  pinMode(22, OUTPUT);
+  //Motor Pin
+  pinMode(MOTORPIN, OUTPUT);
 
   //USB communivcation with raspi
   Serial.begin(9600);
@@ -106,9 +106,11 @@ void loop() {
 }
 
 void dispenseFood(){
-  digitalWrite(22, HIGH);
-  delay(250);
-  digitalWrite(22, LOW);
+  for (int i=127; i<132; i++) {
+    analogWrite(MOTORPIN, i);
+    delay(5);
+  }
+  analogWrite(MOTORPIN, 0);
 }
 
 //gets weight of the foodbowl in gramms 
@@ -157,13 +159,13 @@ void getRfid(char* getString){
   }
 
   //when there was an input
-  if (index > 1 && inputBuffer[0] == 0) {
+  if (index != 0) {
     
-    for (int i = 2; i <= 11; i++) {
-      asciiRfidCardNum[i - 2] = decToASCII(inputBuffer[i]);
+    for (int i = 1; i <= 10; i++) {
+      asciiRfidCardNum[i - 1] = decToASCII(inputBuffer[i]);
     }
-    for (int i = 12; i <= 15; i++) {
-      asciiRfidCountry[i - 12] = decToASCII(inputBuffer[i]);
+    for (int i = 11; i <= 14; i++) {
+      asciiRfidCountry[i - 11] = decToASCII(inputBuffer[i]);
     }
 
     //reverse arrays
@@ -179,7 +181,6 @@ void getRfid(char* getString){
 
     }
   }
-  resetRFID();
 }
 
 char decToASCII(int decimal) {
