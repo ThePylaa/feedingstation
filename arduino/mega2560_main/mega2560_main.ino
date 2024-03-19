@@ -84,6 +84,7 @@ void loop() {
         delay(260);
       }
     }
+    serialFlush();
   }
 
   char rfidRaw[14] = "----NORFID----";
@@ -210,4 +211,9 @@ void reverseArray(char arr[], int length) {
   }
 }
 
+void serialFlush(){
+  while(Serial.available() > 0) {
+    char t = Serial.read();
+  }
+}
 
