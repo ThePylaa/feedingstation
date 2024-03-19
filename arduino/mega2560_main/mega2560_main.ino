@@ -19,8 +19,8 @@ DHT dht(DHTPIN, DHTTYPE);
 //----------
 
 //for stepper motor
-#define MOTORIN1 22
-#define MOTORIN2 23
+#define MOTOR_IN1 22
+#define MAGNETSWITCHPIN 35
 //----------------
 
 //for lightbarrier
@@ -41,8 +41,8 @@ String rfidString;
 
 void setup() {
   //Motor Pin
-  pinMode(MOTORIN1, OUTPUT);
-  pinMode(MOTORIN2, OUTPUT);
+  pinMode(MOTOR_IN1, OUTPUT);
+  pinMode(MAGNETSWITCHPIN, INPUT);
 
   //USB communivcation with raspi
   Serial.begin(9600);
@@ -71,20 +71,27 @@ void loop() {
   //checks for instructions from the raspi
   while(Serial.available() > 0){
     char inChar = (char)Serial.read();
-    inputBuffer += inChar;
+    
+    //for double digit dispenses
+    if (isDigit(inChar)){
+      inputBuffer += inChar;
+      inputBuffer += (char)Serial.read();
+      serialFlush();
+    }else{
+      inputBuffer += inChar;
+    }
 
     //if instructions were send, process them
-    if(inputBuffer != "" && inputBuffer.startsWith("dispense")){
+    if(inputBuffer != "" && inputBuffer.startsWith("dispense ")){
       
-      String numStr = inputBuffer.substring(8); // extracts part after "dispense"
+      String numStr = inputBuffer.substring(9); // extracts part after "dispense "
       int amount = numStr.toInt(); // convert extracted String to int
-
+      
       for (int i = 0; i< amount; i++) {
         dispenseFood();
         delay(260);
       }
     }
-    serialFlush();
   }
 
   char rfidRaw[14] = "----NORFID----";
@@ -115,12 +122,30 @@ void loop() {
 }
 
 void dispenseFood(){
-  digitalWrite(MOTORIN2, LOW);
-  for (int i=128; i<130; i++) {
-    analogWrite(MOTORIN1, i);
-    delay(4);
+  // go away from current magnet
+  while(digitalRead(MAGNETSWITCHPIN) == 0){
+    for (int i=128; i<130; i++) {
+      analogWrite(MOTOR_IN1, i);
+      delay(4);
+    }
+    digitalWrite(MOTOR_IN1, LOW);
+    delay(1000);
   }
-  digitalWrite(MOTORIN1, LOW);
+  digitalWrite(MOTOR_IN1, LOW);
+
+  delay(1000);
+  
+  //got to next magnet
+  while(digitalRead(MAGNETSWITCHPIN) == 1){
+    for (int i=128; i<130; i++) {
+      analogWrite(MOTOR_IN1, i);
+      delay(4);
+    }
+    digitalWrite(MOTOR_IN1, LOW);
+    delay(1000);
+  }
+  digitalWrite(MOTOR_IN1, LOW);
+  Serial.println("Duispensed portion");
 }
 
 //gets weight of the foodbowl in gramms 
