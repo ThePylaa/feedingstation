@@ -20,7 +20,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 //for stepper motor
 #define MOTOR_IN1 22
-#define MAGNETSWITCHPIN 35
+#define MAGNETSWITCHPIN 47
 //----------------
 
 //for lightbarrier
@@ -64,7 +64,6 @@ void setup() {
   //RFID scanner setup
   pinMode(RFIDRESET, OUTPUT);
   resetRFID();
-
 }
 
 void loop() {
@@ -173,9 +172,9 @@ bool isBarrierBroken(){
   return true;
 }
 
-void resetRFID(){
+void resetRFID() {
   digitalWrite(RFIDRESET, LOW);
-  delay(10);
+  delayMicroseconds(1000); // 1ms Low-Puls
   digitalWrite(RFIDRESET, HIGH);
 }
 
@@ -194,13 +193,13 @@ void getRfid(char* getString){
   }
 
   //when there was an input
-  if (index != 0) {
+  if (index > 1 && inputBuffer[0] == 0) {
     
-    for (int i = 1; i <= 10; i++) {
-      asciiRfidCardNum[i - 1] = decToASCII(inputBuffer[i]);
+    for (int i = 2; i <= 11; i++) {
+      asciiRfidCardNum[i - 2] = decToASCII(inputBuffer[i]);
     }
-    for (int i = 11; i <= 14; i++) {
-      asciiRfidCountry[i - 11] = decToASCII(inputBuffer[i]);
+    for (int i = 12; i <= 15; i++) {
+      asciiRfidCountry[i - 12] = decToASCII(inputBuffer[i]);
     }
 
     //reverse arrays
@@ -216,6 +215,7 @@ void getRfid(char* getString){
 
     }
   }
+  resetRFID();
 }
 
 char decToASCII(int decimal) {
